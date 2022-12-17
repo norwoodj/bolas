@@ -1,20 +1,55 @@
-const refreshRate = 100; // milliseconds
-const ballSize = 20; // milliseconds
+const refreshRate = 1; // milliseconds
+const ballSize = 20;
+const velocityFactor = 64;
+const backgroundColor = "navy";
+const lineColor = "red";
+const ballColor = "yellow";
 
-function BolasState() {
-    this.backgroundColor = "navy";
-    this.lineColor = "red";
-    this.ballColor = "yellow";
-    this.newBallStart = null;
-    this.newBallHold = null;
-    this.bolas = [];
+class BolasState {
+    constructor() {
+        this.backgroundColor = backgroundColor;
+        this.lineColor = lineColor;
+        this.ballColor = ballColor;
+        this.newBallStart = null;
+        this.newBallHold = null;
+        this.bolas = [];
+    }
 }
 
-function Bola(posX, posY, velX, velY) {
-    this.posX = posX;
-    this.posY = posY;
-    this.velX = velX;
-    this.velX = velX;
+class Bola {
+    constructor(startX, endX, startY, endY) {
+        this.posX = endX;
+        this.velX = (startX - endX) / velocityFactor;
+        this.posY = endY;
+        this.velY = (startY - endY) / velocityFactor;
+    }
+
+    updatePosition(canvas) {
+        let newPosX = this.posX + this.velX;
+        let newPosY = this.posY + this.velY;
+
+        if (newPosX < 0) {
+            newPosX = -newPosX;
+            this.velX = -this.velX;
+        }
+        if (newPosY < 0) {
+            newPosY = -newPosY;
+            this.velY = -this.velY;
+        }
+
+        if (newPosX > canvas.width) {
+            newPosX = canvas.width - (newPosX - canvas.width);
+            this.velX = -this.velX;
+        }
+
+        if (newPosY > canvas.height) {
+            newPosY = canvas.height - (newPosY - canvas.height);
+            this.velY = -this.velY;
+        }
+
+        this.posX = newPosX;
+        this.posY = newPosY;
+    }
 }
 
 function frame(canvas, state) {
@@ -29,8 +64,7 @@ function frame(canvas, state) {
     ctx.strokeStyle = state.ballColor;
 
     for (b of state.bolas) {
-        //b.posX += b.velX;
-        //b.posY += b.velY;
+        b.updatePosition(canvas);
         ctx.beginPath();
         ctx.arc(b.posX, b.posY, ballSize, 0, 2* Math.PI);
         ctx.stroke();
@@ -66,7 +100,7 @@ function setupEvents(canvas, state) {
         state.newBallHold = e;
 
         if (state.newBallStart != null) {
-            state.bolas.push(new Bola(e.x, e.y, e.x - state.newBallStart.x, e.y - state.newBallStart.y));
+            state.bolas.push(new Bola(state.newBallStart.x, e.x, state.newBallStart.y, e.y));
             state.newBallStart = null;
             state.newBallHold = null;
         }
