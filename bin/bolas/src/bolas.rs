@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+const VELOCITY_SCALING_FACTOR: i32 = 16;
+
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub(crate) struct Point {
     x: i32,
@@ -22,7 +24,7 @@ pub(crate) struct Bola {
 }
 
 impl Bola {
-    fn update_position(&mut self,canvas_height: i32, canvas_width: i32) {
+    fn update_position(&mut self, canvas_height: i32, canvas_width: i32) {
         let mut new_center_x = self.center.x + self.velocity.vel_x;
         let mut new_center_y = self.center.y + self.velocity.vel_y;
 
@@ -41,7 +43,7 @@ impl Bola {
         }
 
         if new_center_y > canvas_height {
-            new_center_y = canvas_height - (new_center_y - canvas_width);
+            new_center_y = canvas_height - (new_center_y - canvas_height);
             self.velocity.vel_y = -self.velocity.vel_y;
         }
 
@@ -61,8 +63,8 @@ pub(crate) struct BolaState {
 
 impl BolaState {
     pub(crate) fn add_bola(&mut self, mut bola: Bola) {
-        bola.velocity.vel_x /= 32;
-        bola.velocity.vel_y /= 32;
+        bola.velocity.vel_x /= VELOCITY_SCALING_FACTOR;
+        bola.velocity.vel_y /= VELOCITY_SCALING_FACTOR;
         self.bolas.push(bola);
     }
 

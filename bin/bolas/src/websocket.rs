@@ -1,4 +1,4 @@
-use actix::{ActorContext, AsyncContext, Actor, StreamHandler};
+use actix::{Actor, ActorContext, AsyncContext, StreamHandler};
 use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
 use actix_web_actors::ws;
 use serde::Deserialize;
@@ -6,8 +6,7 @@ use std::time::Duration;
 
 use crate::bolas::{Bola, BolaState};
 
-const TICK_INTERVAL: Duration = Duration::from_secs(1);
-
+const TICK_INTERVAL: Duration = Duration::from_millis(32);
 
 pub(crate) async fn serve_websockets(
     req: HttpRequest,
@@ -27,7 +26,7 @@ struct BolasWebsocketActor {
 
 #[derive(Deserialize)]
 enum ClientMessage {
-    SetCanvasDimensions {height: i32, width: i32},
+    SetCanvasDimensions { height: i32, width: i32 },
     NewBola(Bola),
 }
 
@@ -59,21 +58,33 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for BolasWebsocketAct
             Ok(msg) => msg,
         };
 
-        let ws::Message::Text(text) = msg else {
-            log::error!("Websocket actor received unexpected message type");
-            ctx.stop();
-            return;
+        let client_message_text = match msg {
+            ws::Message::Text(text) => text,
+            ws::Message::Close(_) => {
+                log::debug!("Client closed the connection, exiting actor");
+                ctx.stop();
+                return;
+            }
+            _ => {
+                log::error!("Websocket actor received unexpected message type {:?}", msg);
+                ctx.stop();
+                return;
+            }
         };
 
-        let Ok(client_message) = serde_json::from_slice(text.as_bytes()) else {
-            log::error!("Failed to parse message from client {}", text);
+        let Ok(client_message) = serde_json::from_slice(client_message_text.as_bytes()) else {
+            log::error!("Failed to parse message from client {}", client_message_text);
             ctx.stop();
             return;
         };
 
         match client_message {
-            ClientMessage::SetCanvasDimensions {height, width} => {
-                log::debug!("Updating canvas dimensions to (h,w) ({}, {})", height, width);
+            ClientMessage::SetCanvasDimensions { height, width } => {
+                log::debug!(
+                    "Updating canvas dimensions to (h,w) ({}, {})",
+                    height,
+                    width
+                );
                 self.bolas_state.set_canvas_dimensions(height, width);
             }
             ClientMessage::NewBola(bola) => {

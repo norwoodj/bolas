@@ -13,6 +13,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .route("/", web::get().to(static_files::serve_index_html))
             .route("/index.js", web::get().to(static_files::serve_index_js))
+            .route("/index.css", web::get().to(static_files::serve_index_css))
             .route("/ws", web::get().to(websocket::serve_websockets))
     })
     .bind(("127.0.0.1", 8080))?
