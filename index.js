@@ -1,20 +1,44 @@
 const refreshRate = 100; // milliseconds
+const ballSize = 20; // milliseconds
 
 function BolasState() {
+    this.backgroundColor = "navy";
+    this.lineColor = "red";
+    this.ballColor = "yellow";
     this.newBallStart = null;
     this.newBallHold = null;
+    this.bolas = [];
 }
 
-function draw(canvas, state) {
+function Bola(posX, posY, velX, velY) {
+    this.posX = posX;
+    this.posY = posY;
+    this.velX = velX;
+    this.velX = velX;
+}
+
+function frame(canvas, state) {
     const ctx = canvas.getContext("2d");
     canvas.setAttribute("width", window.innerWidth);
     canvas.setAttribute("height", window.innerHeight);
-    ctx.fillStyle = "navy";
-    ctx.strokeStyle = "red";
+    ctx.fillStyle = state.backgroundColor;
+    ctx.strokeStyle = state.lineColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    ctx.fillStyle = state.ballColor;
+    ctx.strokeStyle = state.ballColor;
+
+    for (b of state.bolas) {
+        //b.posX += b.velX;
+        //b.posY += b.velY;
+        ctx.beginPath();
+        ctx.arc(b.posX, b.posY, ballSize, 0, 2* Math.PI);
+        ctx.stroke();
+        ctx.fill();
+    }
+
     if (state.newBallStart != null && state.newBallHold != null) {
-        console.log(`Drawing line from [${state.newBallStart.x}, ${state.newBallStart.y}] -> [${state.newBallHold.x}, ${state.newBallHold.y}]`);
+        ctx.strokeStyle = state.lineColor;
         ctx.beginPath();
         ctx.moveTo(state.newBallStart.x, state.newBallStart.y);
         ctx.lineTo(state.newBallHold.x, state.newBallHold.y);
@@ -22,9 +46,9 @@ function draw(canvas, state) {
     }
 }
 
-function drawLooop(canvas, state) {
-    draw(canvas, state);
-    setTimeout(() => drawLooop(canvas, state), refreshRate);
+function frameLooop(canvas, state) {
+    frame(canvas, state);
+    setTimeout(() => frameLooop(canvas, state), refreshRate);
 }
 
 function setupEvents(canvas, state) {
@@ -42,7 +66,7 @@ function setupEvents(canvas, state) {
         state.newBallHold = e;
 
         if (state.newBallStart != null) {
-            console.log(`Will release ball [${state.newBallStart.x}, ${state.newBallStart.y}] -> [${state.newBallHold.x}, ${state.newBallHold.y}]`);
+            state.bolas.push(new Bola(e.x, e.y, e.x - state.newBallStart.x, e.y - state.newBallStart.y));
             state.newBallStart = null;
             state.newBallHold = null;
         }
@@ -53,4 +77,4 @@ function setupEvents(canvas, state) {
 const state = new BolasState();
 const canvas = document.getElementById("bolas");
 setupEvents(canvas, state)
-drawLooop(canvas, state);
+frameLooop(canvas, state);
