@@ -16,8 +16,7 @@ pub(crate) async fn serve_websockets(
         bolas_state: BolaState::default(),
     };
 
-    let resp = ws::start(actor, &req, stream);
-    resp
+    ws::start(actor, &req, stream)
 }
 
 struct BolasWebsocketActor {

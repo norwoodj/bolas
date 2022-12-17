@@ -1,17 +1,17 @@
-const windowResizeDebounceTimeout = 50;
+const windowResizeDebounceTimeout = 50; // milliseconds
 const refreshRate = 4; // milliseconds
-const ballSize = 20;
+const bolaSize = 20;
 const backgroundColor = "navy";
-const ballLineColor = "red";
-const ballColor = "yellow";
+const bolaLineColor = "red";
+const bolaColor = "yellow";
 
 class BolasState {
     constructor() {
         this.bolas = [];
         this.bolasUpdated = true;
         this.backgroundColor = backgroundColor;
-        this.ballLineColor = ballLineColor;
-        this.ballColor = ballColor;
+        this.bolaLineColor = bolaLineColor;
+        this.bolaColor = bolaColor;
         this.newBallStart = null;
         this.newBallHold = null;
         this.lastLineStart = null;
@@ -33,18 +33,23 @@ function drawLine(ctx, start, end, color) {
 }
 
 function drawBallLine(ctx, bolasState) {
-    drawLine(ctx, bolasState.newBallStart, bolasState.newBallHold, bolasState.ballLineColor);
+    drawLine(
+        ctx,
+        bolasState.newBallStart,
+        bolasState.newBallHold,
+        bolasState.bolaLineColor
+    );
     bolasState.lastLineStart = bolasState.newBallStart;
     bolasState.lastLineEnd = bolasState.newBallHold;
 }
 
 function drawBolas(ctx, bolasState) {
-    ctx.fillStyle = bolasState.ballColor;
-    ctx.strokeStyle = bolasState.ballColor;
+    ctx.fillStyle = bolasState.bolaColor;
+    ctx.strokeStyle = bolasState.bolaColor;
 
     for (let b of bolasState.bolas) {
         ctx.beginPath();
-        ctx.arc(b.c.x, b.c.y, ballSize, 0, 2 * Math.PI);
+        ctx.arc(b.c.x, b.c.y, bolaSize, 0, 2 * Math.PI);
         ctx.stroke();
         ctx.fill();
     }
@@ -67,14 +72,19 @@ function fullRedraw(canvas, bolasState) {
 
 function draw(canvas, bolasState) {
     if (bolasState.bolasUpdated) {
-        fullRedraw(canvas, bolasState)
+        fullRedraw(canvas, bolasState);
         return;
     }
 
     const ctx = canvas.getContext("2d");
 
     if (bolasState.lastLineStart != null && bolasState.lastLineEnd != null) {
-        drawLine(ctx, bolasState.lastLineStart, bolasState.lastLineEnd, bolasState.backgroundColor);
+        drawLine(
+            ctx,
+            bolasState.lastLineStart,
+            bolasState.lastLineEnd,
+            bolasState.backgroundColor
+        );
         bolasState.lastLineStart = null;
         bolasState.lastLineEnd = null;
     }
@@ -101,11 +111,18 @@ function debounce(func) {
 function resizeCanvas(canvas, socket) {
     canvas.setAttribute("height", window.innerHeight);
     canvas.setAttribute("width", window.innerWidth);
-    socket.send(JSON.stringify({SetCanvasDimensions: {height: canvas.height, width: canvas.width}}));
+    socket.send(
+        JSON.stringify({
+            SetCanvasDimensions: { height: canvas.height, width: canvas.width },
+        })
+    );
 }
 
 function setupCanvasEvents(canvas, bolasState, socket) {
-    window.addEventListener("resize", debounce((e) => resizeCanvas(canvas, socket)));
+    window.addEventListener(
+        "resize",
+        debounce((e) => resizeCanvas(canvas, socket))
+    );
 
     canvas.onmousedown = (e) => {
         bolasState.newBallStart = e;
@@ -122,11 +139,18 @@ function setupCanvasEvents(canvas, bolasState, socket) {
             let velX = Math.floor(bolasState.newBallStart.x - e.x);
             let velY = Math.floor(bolasState.newBallStart.y - e.y);
 
-            socket.send(JSON.stringify({NewBola: {c: {x: e.x, y: e.y}, v: {vel_x: velX, vel_y: velY}}}));
+            socket.send(
+                JSON.stringify({
+                    NewBola: {
+                        c: { x: e.x, y: e.y },
+                        v: { vel_x: velX, vel_y: velY },
+                    },
+                })
+            );
             bolasState.newBallStart = null;
             bolasState.newBallHold = null;
         }
-    }
+    };
 }
 
 function setupWebsocketEvents(canvas, bolasState) {
