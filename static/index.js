@@ -1,114 +1,97 @@
 const refreshRate = 1; // milliseconds
 const ballSize = 20;
-const velocityFactor = 64;
 const backgroundColor = "navy";
 const lineColor = "red";
 const ballColor = "yellow";
 
-class BolasState {
+class DrawState {
     constructor() {
         this.backgroundColor = backgroundColor;
         this.lineColor = lineColor;
         this.ballColor = ballColor;
         this.newBallStart = null;
         this.newBallHold = null;
-        this.bolas = [];
     }
 }
 
-class Bola {
-    constructor(startX, endX, startY, endY) {
-        this.posX = endX;
-        this.velX = (startX - endX) / velocityFactor;
-        this.posY = endY;
-        this.velY = (startY - endY) / velocityFactor;
-    }
-
-    updatePosition(canvas) {
-        let newPosX = this.posX + this.velX;
-        let newPosY = this.posY + this.velY;
-
-        if (newPosX < 0) {
-            newPosX = -newPosX;
-            this.velX = -this.velX;
-        }
-        if (newPosY < 0) {
-            newPosY = -newPosY;
-            this.velY = -this.velY;
-        }
-
-        if (newPosX > canvas.width) {
-            newPosX = canvas.width - (newPosX - canvas.width);
-            this.velX = -this.velX;
-        }
-
-        if (newPosY > canvas.height) {
-            newPosY = canvas.height - (newPosY - canvas.height);
-            this.velY = -this.velY;
-        }
-
-        this.posX = newPosX;
-        this.posY = newPosY;
-    }
-}
-
-function frame(canvas, state) {
+function draw(canvas, drawState, bolasState) {
     const ctx = canvas.getContext("2d");
     canvas.setAttribute("width", window.innerWidth);
     canvas.setAttribute("height", window.innerHeight);
-    ctx.fillStyle = state.backgroundColor;
-    ctx.strokeStyle = state.lineColor;
+    ctx.fillStyle = drawState.backgroundColor;
+    ctx.strokeStyle = drawState.lineColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = state.ballColor;
-    ctx.strokeStyle = state.ballColor;
+    ctx.fillStyle = drawState.ballColor;
+    ctx.strokeStyle = drawState.ballColor;
 
-    for (b of state.bolas) {
-        b.updatePosition(canvas);
+    for (b of bolasState.bolas) {
         ctx.beginPath();
-        ctx.arc(b.posX, b.posY, ballSize, 0, 2* Math.PI);
+        ctx.arc(b.c.x, b.c.y, ballSize, 0, 2* Math.PI);
         ctx.stroke();
         ctx.fill();
     }
 
-    if (state.newBallStart != null && state.newBallHold != null) {
-        ctx.strokeStyle = state.lineColor;
+    if (drawState.newBallStart != null && drawState.newBallHold != null) {
+        ctx.strokeStyle = drawState.lineColor;
         ctx.beginPath();
-        ctx.moveTo(state.newBallStart.x, state.newBallStart.y);
-        ctx.lineTo(state.newBallHold.x, state.newBallHold.y);
+        ctx.moveTo(drawState.newBallStart.x, drawState.newBallStart.y);
+        ctx.lineTo(drawState.newBallHold.x, drawState.newBallHold.y);
         ctx.stroke();
     }
 }
 
-function frameLooop(canvas, state) {
-    frame(canvas, state);
-    setTimeout(() => frameLooop(canvas, state), refreshRate);
-}
-
-function setupEvents(canvas, state) {
+function setupCanvasEvents(canvas, drawState, socket) {
     let clickSpot = null;
 
     canvas.onmousedown = (e) => {
-        state.newBallStart = e;
+        drawState.newBallStart = e;
     };
 
     canvas.onmousemove = (e) => {
-        state.newBallHold = e;
+        drawState.newBallHold = e;
     };
 
     canvas.onmouseup = (e) => {
-        state.newBallHold = e;
+        drawState.newBallHold = e;
 
-        if (state.newBallStart != null) {
-            state.bolas.push(new Bola(state.newBallStart.x, e.x, state.newBallStart.y, e.y));
-            state.newBallStart = null;
-            state.newBallHold = null;
+        if (drawState.newBallStart != null) {
+            let velX = Math.floor(drawState.newBallStart.x - e.x);
+            let velY = Math.floor(drawState.newBallStart.y - e.y);
+
+            socket.send(JSON.stringify({NewBola: {c: {x: e.x, y: e.y}, v: {vel_x: velX, vel_y: velY}}}));
+            drawState.newBallStart = null;
+            drawState.newBallHold = null;
         }
     }
 }
 
+function setupWebsocketEvents(canvas, drawState) {
+    let socket = new WebSocket("ws://localhost:8080/ws");
 
-const state = new BolasState();
+    socket.onopen = (e) => {
+        socket.send(JSON.stringify({SetCanvasDimensions: {height: canvas.height, width: canvas.width}}))
+    };
+
+    socket.onmessage = (e) => {
+        console.log(`Received data ${e.data}`);
+        draw(canvas, drawState, JSON.parse(e.data));
+    };
+
+    socket.onclose = (e) => {
+        console.log("Socket closed");
+    };
+
+    socket.onerror = (e) => {
+        console.log("Socket errored");
+    };
+
+    return socket;
+}
+
+
+const drawState = new DrawState();
 const canvas = document.getElementById("bolas");
-setupEvents(canvas, state)
-frameLooop(canvas, state);
+draw(canvas, drawState, {bolas: []});
+let socket = setupWebsocketEvents(canvas, drawState);
+setupCanvasEvents(canvas, drawState, socket);

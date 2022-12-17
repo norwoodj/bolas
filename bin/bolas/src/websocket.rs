@@ -1,29 +1,85 @@
-use actix::{Actor, StreamHandler};
-use actix_web::{web, Error, HttpRequest, HttpResponse};
+use actix::{ActorContext, AsyncContext, Actor, StreamHandler};
+use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
 use actix_web_actors::ws;
+use serde::Deserialize;
+use std::time::Duration;
+
+use crate::bolas::{Bola, BolaState};
+
+const TICK_INTERVAL: Duration = Duration::from_secs(1);
+
 
 pub(crate) async fn serve_websockets(
     req: HttpRequest,
     stream: web::Payload,
 ) -> Result<HttpResponse, Error> {
-    let resp = ws::start(BolasWebsocketHandler, &req, stream);
-    println!("{:?}", resp);
+    let actor = BolasWebsocketActor {
+        bolas_state: BolaState::default(),
+    };
+
+    let resp = ws::start(actor, &req, stream);
     resp
 }
 
-struct BolasWebsocketHandler;
-
-impl Actor for BolasWebsocketHandler {
-    type Context = ws::WebsocketContext<Self>;
+struct BolasWebsocketActor {
+    bolas_state: BolaState,
 }
 
-impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for BolasWebsocketHandler {
+#[derive(Deserialize)]
+enum ClientMessage {
+    SetCanvasDimensions {height: i32, width: i32},
+    NewBola(Bola),
+}
+
+impl BolasWebsocketActor {
+    fn tick(&mut self, ctx: &mut ws::WebsocketContext<Self>) {
+        ctx.run_interval(TICK_INTERVAL, |act, ctx| {
+            act.bolas_state.tick();
+            let message = serde_json::to_string(&act.bolas_state).unwrap();
+            ctx.text(message);
+        });
+    }
+}
+
+impl Actor for BolasWebsocketActor {
+    type Context = ws::WebsocketContext<Self>;
+
+    fn started(&mut self, ctx: &mut Self::Context) {
+        self.tick(ctx);
+    }
+}
+
+impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for BolasWebsocketActor {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
-        match msg {
-            Ok(ws::Message::Ping(msg)) => ctx.pong(&msg),
-            Ok(ws::Message::Text(text)) => ctx.text(text),
-            Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
-            _ => (),
+        let msg = match msg {
+            Err(_) => {
+                ctx.stop();
+                return;
+            }
+            Ok(msg) => msg,
+        };
+
+        let ws::Message::Text(text) = msg else {
+            log::error!("Websocket actor received unexpected message type");
+            ctx.stop();
+            return;
+        };
+
+        let Ok(client_message) = serde_json::from_slice(text.as_bytes()) else {
+            log::error!("Failed to parse message from client {}", text);
+            ctx.stop();
+            return;
+        };
+
+        match client_message {
+            ClientMessage::SetCanvasDimensions {height, width} => {
+                log::debug!("Updating canvas dimensions to (h,w) ({}, {})", height, width);
+                self.bolas_state.set_canvas_dimensions(height, width);
+            }
+            ClientMessage::NewBola(bola) => {
+                log::debug!("Adding new bola {:?}", bola);
+                self.bolas_state.add_bola(bola);
+            }
         }
     }
 }

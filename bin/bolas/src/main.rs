@@ -1,5 +1,6 @@
 use actix_web::{middleware::Logger, web, App, HttpServer};
 
+mod bolas;
 mod static_files;
 mod websocket;
 
