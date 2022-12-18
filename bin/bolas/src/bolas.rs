@@ -4,7 +4,8 @@ use std::collections::HashSet;
 use std::ops::Range;
 
 const VELOCITY_SCALING_FACTOR: i32 = 16;
-const BOLA_RADIUS: i32 = 20;
+const BOLA_COLLISION_RADIUS: i32 = 16;
+const COLLISION_FRAMES: usize = 5;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub(crate) struct Point {
@@ -25,6 +26,10 @@ pub(crate) struct Bola {
     #[serde(skip_serializing)]
     #[serde(rename = "v")]
     velocity: Vector,
+    #[serde(skip)]
+    last_collision: usize,
+    #[serde(skip_deserializing, rename = "t")]
+    collision_frames_remaining: usize,
 }
 
 impl Bola {
@@ -57,8 +62,8 @@ impl Bola {
 
     fn get_location_ranges(&self) -> (Range<i32>, Range<i32>) {
         (
-            self.center.x - BOLA_RADIUS..self.center.x + BOLA_RADIUS,
-            self.center.y - BOLA_RADIUS..self.center.y + BOLA_RADIUS,
+            self.center.x - BOLA_COLLISION_RADIUS..self.center.x + BOLA_COLLISION_RADIUS,
+            self.center.y - BOLA_COLLISION_RADIUS..self.center.y + BOLA_COLLISION_RADIUS,
         )
     }
 }
@@ -96,13 +101,24 @@ impl BolaState {
         let mut colliding_bolas = vec![];
         let mut overlaps_x: IntervalTree<i32, usize> = IntervalTree::default();
         let mut overlaps_y: IntervalTree<i32, usize> = IntervalTree::default();
+        for b in &mut self.bolas {
+            if b.collision_frames_remaining > 0 {
+                b.collision_frames_remaining -= 1;
+            }
+        }
 
         for (i, b) in self.bolas.iter().enumerate() {
             let (x_range, y_range) = b.get_location_ranges();
-            let collision_x: HashSet<usize> =
-                overlaps_x.find(&x_range).map(|e| *e.data()).collect();
-            let collision_y: HashSet<usize> =
-                overlaps_y.find(&y_range).map(|e| *e.data()).collect();
+            let collision_x: HashSet<usize> = overlaps_x
+                .find(&x_range)
+                .map(|e| *e.data())
+                .filter(|o| b.collision_frames_remaining == 0 || b.last_collision != *o)
+                .collect();
+            let collision_y: HashSet<usize> = overlaps_y
+                .find(&y_range)
+                .map(|e| *e.data())
+                .filter(|o| b.collision_frames_remaining == 0 || b.last_collision != *o)
+                .collect();
 
             let collisions = collision_x.intersection(&collision_y);
             for c in collisions {
@@ -133,14 +149,17 @@ impl BolaState {
             let speed = relative_velocity_vector.0 * collision_vector_normalized.0
                 + relative_velocity_vector.1 * collision_vector_normalized.1;
 
-            self.bolas.get_mut(one).unwrap().velocity.vel_x -=
-                (collision_vector_normalized.0 * speed) as i32;
-            self.bolas.get_mut(one).unwrap().velocity.vel_y -=
-                (collision_vector_normalized.1 * speed) as i32;
-            self.bolas.get_mut(two).unwrap().velocity.vel_x +=
-                (collision_vector_normalized.0 * speed) as i32;
-            self.bolas.get_mut(two).unwrap().velocity.vel_y +=
-                (collision_vector_normalized.1 * speed) as i32;
+            let bola_one = self.bolas.get_mut(one).unwrap();
+            bola_one.velocity.vel_x -= (collision_vector_normalized.0 * speed) as i32;
+            bola_one.velocity.vel_y -= (collision_vector_normalized.1 * speed) as i32;
+            bola_one.last_collision = two;
+            bola_one.collision_frames_remaining = COLLISION_FRAMES;
+
+            let bola_two = self.bolas.get_mut(two).unwrap();
+            bola_two.velocity.vel_x += (collision_vector_normalized.0 * speed) as i32;
+            bola_two.velocity.vel_y += (collision_vector_normalized.1 * speed) as i32;
+            bola_two.last_collision = one;
+            bola_two.collision_frames_remaining = COLLISION_FRAMES;
 
             let bola_one = self.bolas.get(one).unwrap();
             let bola_two = self.bolas.get(two).unwrap();
