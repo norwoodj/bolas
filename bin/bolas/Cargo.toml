@@ -9,6 +9,7 @@ actix = { workspace = true }
 actix-files = { workspace = true }
 actix-web = { workspace = true }
 actix-web-actors = { workspace = true }
+bio = { workspace = true }
 env_logger = { workspace = true }
 lazy_static = { workspace = true }
 log = { workspace = true }

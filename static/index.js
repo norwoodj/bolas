@@ -1,6 +1,6 @@
 const windowResizeDebounceTimeout = 50; // milliseconds
 const refreshRate = 4; // milliseconds
-const bolaSize = 20;
+const bolaRadius = 20;
 const backgroundColor = "navy";
 const bolaLineColor = "red";
 const bolaColor = "yellow";
@@ -49,7 +49,7 @@ function drawBolas(ctx, bolasState) {
 
     for (let b of bolasState.bolas) {
         ctx.beginPath();
-        ctx.arc(b.c.x, b.c.y, bolaSize, 0, 2 * Math.PI);
+        ctx.arc(b.c.x, b.c.y, bolaRadius, 0, 2 * Math.PI);
         ctx.stroke();
         ctx.fill();
     }
