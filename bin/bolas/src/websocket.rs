@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use crate::bolas::{Bola, BolaState};
 
-const TICK_INTERVAL: Duration = Duration::from_millis(32);
+const TICK_INTERVAL: Duration = Duration::from_millis(16);
 
 pub(crate) async fn serve_websockets(
     req: HttpRequest,
@@ -33,7 +33,12 @@ impl BolasWebsocketActor {
     fn tick(&mut self, ctx: &mut ws::WebsocketContext<Self>) {
         ctx.run_interval(TICK_INTERVAL, |act, ctx| {
             act.bolas_state.tick();
-            let message = serde_json::to_string(&act.bolas_state).unwrap();
+            let Ok(message) = serde_json::to_string(&act.bolas_state) else {
+                log::error!("Failed to serialize bolas state to send to client!");
+                ctx.stop();
+                return;
+            };
+
             ctx.text(message);
         });
     }
