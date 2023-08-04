@@ -1,4 +1,5 @@
 #!/usr/bin/make -f
+export DH_ALWAYS_EXCLUDE=target
 
 %:
 	dh $@
