@@ -2,6 +2,7 @@ use actix_web::{middleware::Logger, web, App, HttpServer};
 use clap::Parser;
 use std::io;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 
 mod bolas;
 mod static_files;
@@ -10,6 +11,10 @@ mod websocket;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct BolasArgs {
+    /// Path to folder containing static files to be served
+    #[arg(short, long)]
+    static_file_path: PathBuf,
+
     /// List of TCP addresses to listen for http on
     #[arg(short, long)]
     tcp_addrs: Vec<SocketAddr>,
@@ -23,14 +28,18 @@ struct BolasArgs {
 async fn main() -> io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     let args = BolasArgs::parse();
+    let static_file_path = args.static_file_path.clone();
 
-    let mut server = HttpServer::new(|| {
+    let mut server = HttpServer::new(move || {
         App::new()
+            .app_data(web::Data::new(static_file_path.clone()))
             .wrap(Logger::default())
-            .route("/", web::get().to(static_files::serve_index_html))
-            .route("/index.js", web::get().to(static_files::serve_index_js))
-            .route("/index.css", web::get().to(static_files::serve_index_css))
             .route("/ws", web::get().to(websocket::serve_websockets))
+            .route("/", web::get().to(static_files::serve_index_html))
+            .route(
+                "/{filename}",
+                web::get().to(static_files::serve_static_file),
+            )
     });
 
     for t in args.tcp_addrs {

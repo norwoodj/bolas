@@ -8,4 +8,7 @@ deb:
 	debuild
 
 run:
-	cargo run -- --unix-addrs /tmp/bolas.sock --tcp-addrs 127.0.0.1:8080
+	cargo run -- \
+		--static-file-path ./static \
+		--tcp-addrs 127.0.0.1:8080 \
+		--unix-addrs /tmp/bolas.sock
