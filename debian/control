@@ -1,0 +1,7 @@
+Source: bolas
+Maintainer: John Norwood <norwood.john.m@gmail.com>
+
+Package: bolas
+Priority: extra
+Architecture: any
+Description: bolas server and frontend assets

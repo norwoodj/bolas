@@ -1,0 +1,10 @@
+target/
+debian/.*
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/bolas*
+debian/bolas.debhelper.log
+debian/bolas.postinst.debhelper
+debian/bolas.substvars
+debian/bolas/
