@@ -2,7 +2,7 @@ build:
 	cargo build --release
 
 release:
-	./release.sh
+	./scripts/release.sh
 
 deb: clean
 	debuild

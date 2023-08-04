@@ -469,7 +469,7 @@ dependencies = [
 
 [[package]]
 name = "bolas"
-version = "0.1.0"
+version = "2023.8.0"
 dependencies = [
  "actix",
  "actix-files",
