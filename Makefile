@@ -4,8 +4,12 @@ build:
 release:
 	./release.sh
 
-deb:
+deb: clean
 	debuild
+
+clean:
+	cargo clean
+	rm -rvf debian/bolas debian/bolas.postrm.debhelper debhelper-build-stamp
 
 run:
 	cargo run -- \

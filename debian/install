@@ -1,2 +1,2 @@
 static etc/bolas
-target/release/bolas /usr/local/bin/bolas
+target/release/bolas /usr/bin
