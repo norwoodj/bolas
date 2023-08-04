@@ -38,7 +38,7 @@ function drawBallLine(ctx, bolasState) {
         ctx,
         bolasState.newBallStart,
         bolasState.newBallHold,
-        bolasState.bolaLineColor
+        bolasState.bolaLineColor,
     );
     bolasState.lastLineStart = bolasState.newBallStart;
     bolasState.lastLineEnd = bolasState.newBallHold;
@@ -89,7 +89,7 @@ function draw(canvas, bolasState) {
             ctx,
             bolasState.lastLineStart,
             bolasState.lastLineEnd,
-            bolasState.backgroundColor
+            bolasState.backgroundColor,
         );
         bolasState.lastLineStart = null;
         bolasState.lastLineEnd = null;
@@ -120,14 +120,14 @@ function resizeCanvas(canvas, socket) {
     socket.send(
         JSON.stringify({
             SetCanvasDimensions: { height: canvas.height, width: canvas.width },
-        })
+        }),
     );
 }
 
 function setupCanvasEvents(canvas, bolasState, socket) {
     window.addEventListener(
         "resize",
-        debounce((e) => resizeCanvas(canvas, socket))
+        debounce((_) => resizeCanvas(canvas, socket)),
     );
 
     canvas.onmousedown = (e) => {
@@ -151,7 +151,7 @@ function setupCanvasEvents(canvas, bolasState, socket) {
                         c: { x: e.x, y: e.y },
                         v: { vel_x: velX, vel_y: velY },
                     },
-                })
+                }),
             );
             bolasState.newBallStart = null;
             bolasState.newBallHold = null;
@@ -160,9 +160,10 @@ function setupCanvasEvents(canvas, bolasState, socket) {
 }
 
 function setupWebsocketEvents(canvas, bolasState) {
-    let socket = new WebSocket("ws://localhost:8080/ws");
+    let server = location.origin.replace(/^http/, "ws") + "/ws";
+    let socket = new WebSocket(server);
 
-    socket.onopen = (e) => {
+    socket.onopen = (_) => {
         resizeCanvas(canvas, socket);
         setupCanvasEvents(canvas, bolasState, socket);
         drawLoop(canvas, bolasState);
@@ -174,11 +175,11 @@ function setupWebsocketEvents(canvas, bolasState) {
         bolasState.bolasUpdated = true;
     };
 
-    socket.onclose = (e) => {
+    socket.onclose = (_) => {
         console.log("Socket closed");
     };
 
-    socket.onerror = (e) => {
+    socket.onerror = (_) => {
         console.log("Socket errored");
     };
 

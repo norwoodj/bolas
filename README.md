@@ -10,6 +10,5 @@ actix web framework a bit on a side-project.
 
 Right now there are a lot of improvements to be made:
 
--   Make the server configurable, the frontend hard-codes localhost:8080 as the websocket server
 -   Make the physics better, right now the balls stick together at times on collisions
 -   Write a better README with a gif of the balls in action

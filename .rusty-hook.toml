@@ -1,2 +1,5 @@
 [hooks]
 pre-commit = "./scripts/lint.sh"
+
+[logging]
+verbose = true

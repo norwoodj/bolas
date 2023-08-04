@@ -3,6 +3,11 @@ members = [
     "bin/bolas",
 ]
 
+[workspace.package]
+version = "0.1.0"
+edition = "2018"
+authors = ["John Norwood"]
+
 [workspace.dependencies]
 actix = "0.13"
 actix-files = "0.6"
