@@ -12,3 +12,12 @@ Right now there are a lot of improvements to be made:
 
 -   Make the physics better, right now the balls stick together at times on collisions
 -   Write a better README with a gif of the balls in action
+
+### Building and Developing Locally
+
+You will need cargo installed to build/run locally. To start the server,
+run the following, then navigate to http://localhost:23080 in your browser.
+
+```
+make run
+```
