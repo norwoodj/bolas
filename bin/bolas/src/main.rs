@@ -10,6 +10,7 @@ use std::path::PathBuf;
 
 mod bolas;
 mod static_files;
+mod version;
 mod websocket;
 
 #[derive(Parser, Debug)]
@@ -30,6 +31,10 @@ struct BolasArgs {
     /// List of Unix socket addresses to listen for http on
     #[arg(long)]
     unix_addrs: Vec<String>,
+
+    /// Path to a json file containing build / version information
+    #[arg(long)]
+    version_file: Option<PathBuf>,
 }
 
 fn get_systemd_listeners(
@@ -62,14 +67,27 @@ fn get_systemd_listeners(
 async fn main() -> io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     let args = BolasArgs::parse();
+    let version_info = args
+        .version_file
+        .as_ref()
+        .and_then(version::load_version_file);
     let static_file_path = args.static_file_path.clone();
 
     let mut server = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(static_file_path.clone()))
+            .app_data(web::Data::new(version_info.clone()))
             .wrap(Logger::default())
             .route("/ws", web::get().to(websocket::serve_websockets))
             .route("/", web::get().to(static_files::serve_index_html))
+            .route(
+                "/frontend-version.json",
+                web::get().to(version::serve_version_info),
+            )
+            .route(
+                "/server-version.json",
+                web::get().to(version::serve_version_info),
+            )
             .route(
                 "/{filename}",
                 web::get().to(static_files::serve_static_file),

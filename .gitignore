@@ -8,3 +8,5 @@ debian/bolas.debhelper.log
 debian/bolas.postinst.debhelper
 debian/bolas.substvars
 debian/bolas/
+version.json
+static/frontend-version.json
