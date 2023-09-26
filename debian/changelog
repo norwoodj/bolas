@@ -1,3 +1,12 @@
+bolas (2023.9.0) jammy; urgency=medium
+
+  * feat: Adds a version file to the debian package and serves it
+  * chore: updates docs to add instructions for running locally
+  * chore: updates to use vergen to generate server version info
+  * chore: removes no longer used version file
+
+ -- John Norwood <norwood.john.m@gmail.com>  Tue, 26 Sep 2023 08:54:19 +0100
+
 bolas (2023.8.0) jammy; urgency=medium
 
   * UNRELEASED
