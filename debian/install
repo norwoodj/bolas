@@ -1,3 +1,2 @@
 static etc/bolas
-version.json etc/bolas
 target/release/bolas /usr/bin
