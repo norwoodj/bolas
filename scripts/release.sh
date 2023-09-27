@@ -16,6 +16,7 @@ function main {
 
 	echo "Releasing version ${new_release}"
 	sed -i "s|${last_release}|${new_release}|g" ${VERSION_FILES[*]}
+	cargo check
 
 	EMAIL=$(git config user.email) gbp dch --release --new-version=${new_release}
 
