@@ -8,14 +8,14 @@ const BOLA_COLLISION_RADIUS: i32 = 20;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Point {
-    x: i32,
-    y: i32,
+    x: f64,
+    y: f64,
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Vector {
-    vel_x: i32,
-    vel_y: i32,
+    vel_x: f64,
+    vel_y: f64,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -28,15 +28,15 @@ pub(crate) struct Bola {
 }
 
 impl Bola {
-    fn update_position(&mut self, canvas_height: i32, canvas_width: i32) {
+    fn update_position(&mut self, canvas_height: f64, canvas_width: f64) {
         let mut new_center_x = self.center.x + self.velocity.vel_x;
         let mut new_center_y = self.center.y + self.velocity.vel_y;
 
-        if new_center_x < 0 {
+        if new_center_x < 0. {
             new_center_x = -new_center_x;
             self.velocity.vel_x = -self.velocity.vel_x;
         }
-        if new_center_y < 0 {
+        if new_center_y < 0. {
             new_center_y = -new_center_y;
             self.velocity.vel_y = -self.velocity.vel_y;
         }
@@ -57,8 +57,10 @@ impl Bola {
 
     fn get_location_ranges(&self) -> (Range<i32>, Range<i32>) {
         (
-            self.center.x - BOLA_COLLISION_RADIUS..self.center.x + BOLA_COLLISION_RADIUS,
-            self.center.y - BOLA_COLLISION_RADIUS..self.center.y + BOLA_COLLISION_RADIUS,
+            (self.center.x.round() as i32) - BOLA_COLLISION_RADIUS
+                ..(self.center.x.round() as i32) + BOLA_COLLISION_RADIUS,
+            (self.center.y.round() as i32) - BOLA_COLLISION_RADIUS
+                ..(self.center.y.round() as i32) + BOLA_COLLISION_RADIUS,
         )
     }
 }
@@ -95,8 +97,8 @@ impl BolasState {
         }
     }
     pub(crate) fn add_bola(&mut self, mut bola: Bola) {
-        bola.velocity.vel_x /= self.velocity_scaling_factor;
-        bola.velocity.vel_y /= self.velocity_scaling_factor;
+        bola.velocity.vel_x /= self.velocity_scaling_factor as f64;
+        bola.velocity.vel_y /= self.velocity_scaling_factor as f64;
         self.bolas.push(bola);
     }
 
@@ -107,7 +109,7 @@ impl BolasState {
 
     pub(crate) fn tick(&mut self) {
         for b in &mut self.bolas {
-            b.update_position(self.canvas_height, self.canvas_width);
+            b.update_position(self.canvas_height as f64, self.canvas_width as f64);
         }
 
         self.update_for_collisions();
@@ -144,37 +146,43 @@ impl BolasState {
             let bola_one = &self.bolas[one];
             let bola_two = &self.bolas[two];
 
-            let distance = (((bola_one.center.x - bola_two.center.x) as f64).powf(2.)
-                + ((bola_one.center.y - bola_two.center.y) as f64).powf(2.))
+            let distance = ((bola_one.center.x - bola_two.center.x).powf(2.)
+                + (bola_one.center.y - bola_two.center.y).powf(2.))
             .sqrt();
 
+            if distance == 0. {
+                continue;
+            }
+
             let collision_vector = (
-                (bola_one.center.x - bola_two.center.x) as f64,
-                (bola_one.center.y - bola_two.center.y) as f64,
+                (bola_one.center.x - bola_two.center.x),
+                (bola_one.center.y - bola_two.center.y),
             );
             let collision_vector_normalized =
                 (collision_vector.0 / distance, collision_vector.1 / distance);
             let relative_velocity_vector = (
-                (bola_one.velocity.vel_x - bola_two.velocity.vel_x) as f64,
-                (bola_one.velocity.vel_y - bola_two.velocity.vel_y) as f64,
+                (bola_one.velocity.vel_x - bola_two.velocity.vel_x),
+                (bola_one.velocity.vel_y - bola_two.velocity.vel_y),
             );
             let speed = relative_velocity_vector.0 * collision_vector_normalized.0
                 + relative_velocity_vector.1 * collision_vector_normalized.1;
 
             let bola_one = &mut self.bolas[one];
-            bola_one.velocity.vel_x -= (collision_vector_normalized.0 * speed) as i32;
-            bola_one.velocity.vel_y -= (collision_vector_normalized.1 * speed) as i32;
+            bola_one.velocity.vel_x -= collision_vector_normalized.0 * speed;
+            bola_one.velocity.vel_y -= collision_vector_normalized.1 * speed;
 
             let bola_two = &mut self.bolas[two];
-            bola_two.velocity.vel_x += (collision_vector_normalized.0 * speed) as i32;
-            bola_two.velocity.vel_y += (collision_vector_normalized.1 * speed) as i32;
+            bola_two.velocity.vel_x += collision_vector_normalized.0 * speed;
+            bola_two.velocity.vel_y += collision_vector_normalized.1 * speed;
 
             let bola_one = &self.bolas[one];
             let bola_two = &self.bolas[two];
             log::debug!(
-                "Updated for collision between bolas at {:?} and {:?}",
+                "Updated for collision between bolas at {:?}:<{:?}> and {:?}:<{:?}>",
                 bola_one.center,
-                bola_two.center
+                bola_two.center,
+                bola_one.velocity,
+                bola_two.velocity,
             )
         }
 
