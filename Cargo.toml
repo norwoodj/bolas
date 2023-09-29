@@ -4,7 +4,7 @@ members = [
 ]
 
 [workspace.package]
-version = "2023.9.1"
+version = "2023.9.2"
 edition = "2018"
 authors = ["John Norwood"]
 

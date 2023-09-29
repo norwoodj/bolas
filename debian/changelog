@@ -1,3 +1,11 @@
+bolas (2023.9.2) jammy; urgency=medium
+
+  * chore: makes the refresh rate half as frequent and the velocity scaling factory half as big
+  * Removes no longer used collision frames remaining functionality and adds a heuristic to weird collisions
+  * feat: Makes refresh rate configurable and allows for passing config parameters as environment variables
+
+ -- John Norwood <norwood.john.m@gmail.com>  Fri, 29 Sep 2023 23:13:55 +0100
+
 bolas (2023.9.1) jammy; urgency=medium
 
   * fix: Fixes release script to update Cargo.lock before committing
