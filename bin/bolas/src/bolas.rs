@@ -2,23 +2,23 @@ use bio::data_structures::interval_tree::IntervalTree;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::ops::Range;
+use std::time::Duration;
 
-const VELOCITY_SCALING_FACTOR: i32 = 8;
 const BOLA_COLLISION_RADIUS: i32 = 20;
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Point {
     x: i32,
     y: i32,
 }
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub(crate) struct Vector {
     vel_x: i32,
     vel_y: i32,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Bola {
     #[serde(rename = "c")]
     center: Point,
@@ -63,9 +63,15 @@ impl Bola {
     }
 }
 
-#[derive(Default, Serialize)]
-pub(crate) struct BolaState {
+#[derive(Serialize)]
+pub(crate) struct BolasState {
     bolas: Vec<Bola>,
+
+    #[serde(skip_serializing)]
+    velocity_scaling_factor: i32,
+
+    #[serde(skip_serializing)]
+    refresh_rate: Duration,
 
     #[serde(skip_serializing)]
     canvas_height: i32,
@@ -77,10 +83,20 @@ pub(crate) struct BolaState {
     last_collisions: HashSet<(usize, usize)>,
 }
 
-impl BolaState {
+impl BolasState {
+    pub(crate) fn new(refresh_rate_ms: u64, velocity_scaling_factor: i32) -> Self {
+        Self {
+            bolas: Default::default(),
+            refresh_rate: Duration::from_millis(refresh_rate_ms),
+            canvas_height: 0,
+            canvas_width: 0,
+            last_collisions: Default::default(),
+            velocity_scaling_factor,
+        }
+    }
     pub(crate) fn add_bola(&mut self, mut bola: Bola) {
-        bola.velocity.vel_x /= VELOCITY_SCALING_FACTOR;
-        bola.velocity.vel_y /= VELOCITY_SCALING_FACTOR;
+        bola.velocity.vel_x /= self.velocity_scaling_factor;
+        bola.velocity.vel_y /= self.velocity_scaling_factor;
         self.bolas.push(bola);
     }
 
@@ -163,5 +179,9 @@ impl BolaState {
         }
 
         self.last_collisions = colliding_bolas;
+    }
+
+    pub(crate) fn get_refresh_rate(&self) -> Duration {
+        self.refresh_rate
     }
 }

@@ -2,25 +2,27 @@ use actix::{Actor, ActorContext, AsyncContext, StreamHandler};
 use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
 use actix_web_actors::ws;
 use serde::Deserialize;
-use std::time::Duration;
 
-use crate::bolas::{Bola, BolaState};
-
-const TICK_INTERVAL: Duration = Duration::from_millis(32);
+use crate::bolas::{Bola, BolasState};
 
 pub(crate) async fn serve_websockets(
     req: HttpRequest,
     stream: web::Payload,
+    bolas_refresh_rate_ms: web::Data<u64>,
+    velocity_scaling_factor: web::Data<i32>,
 ) -> Result<HttpResponse, Error> {
     let actor = BolasWebsocketActor {
-        bolas_state: BolaState::default(),
+        bolas_state: BolasState::new(
+            *bolas_refresh_rate_ms.into_inner(),
+            *velocity_scaling_factor.into_inner(),
+        ),
     };
 
     ws::start(actor, &req, stream)
 }
 
 struct BolasWebsocketActor {
-    bolas_state: BolaState,
+    bolas_state: BolasState,
 }
 
 #[derive(Deserialize)]
@@ -31,7 +33,7 @@ enum ClientMessage {
 
 impl BolasWebsocketActor {
     fn tick(&mut self, ctx: &mut ws::WebsocketContext<Self>) {
-        ctx.run_interval(TICK_INTERVAL, |act, ctx| {
+        ctx.run_interval(self.bolas_state.get_refresh_rate(), |act, ctx| {
             act.bolas_state.tick();
             let Ok(message) = serde_json::to_string(&act.bolas_state) else {
                 log::error!("Failed to serialize bolas state to send to client!");
