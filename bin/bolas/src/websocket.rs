@@ -77,7 +77,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for BolasWebsocketAct
         };
 
         let Ok(client_message) = serde_json::from_slice(client_message_text.as_bytes()) else {
-            log::error!("Failed to parse message from client {}", client_message_text);
+            log::error!(
+                "Failed to parse message from client {}",
+                client_message_text
+            );
             ctx.stop();
             return;
         };

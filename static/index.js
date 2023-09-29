@@ -3,7 +3,6 @@ const bolaRadius = 20;
 const defaultBackgroundColor = "navy";
 const defaultBolaLineColor = "red";
 const defaultBolaColor = "yellow";
-const defaultBolaCollisionColor = "yellow";
 
 class BolasState {
     constructor() {
@@ -12,7 +11,6 @@ class BolasState {
         this.backgroundColor = defaultBackgroundColor;
         this.bolaLineColor = defaultBolaLineColor;
         this.bolaColor = defaultBolaColor;
-        this.bolaCollisionColor = defaultBolaCollisionColor;
         this.newBallStart = null;
         this.newBallHold = null;
         this.lastLineStart = null;
@@ -46,13 +44,8 @@ function drawBallLine(ctx, bolasState) {
 
 function drawBolas(ctx, bolasState) {
     for (let b of bolasState.bolas) {
-        if (b.t > 0) {
-            ctx.fillStyle = bolasState.bolaCollisionColor;
-            ctx.strokeStyle = bolasState.bolaCollisionColor;
-        } else {
-            ctx.fillStyle = bolasState.bolaColor;
-            ctx.strokeStyle = bolasState.bolaColor;
-        }
+        ctx.fillStyle = bolasState.bolaColor;
+        ctx.strokeStyle = bolasState.bolaColor;
 
         ctx.beginPath();
         ctx.arc(b.c.x, b.c.y, bolaRadius, 0, 2 * Math.PI);

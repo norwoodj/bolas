@@ -5,7 +5,6 @@ use std::ops::Range;
 
 const VELOCITY_SCALING_FACTOR: i32 = 8;
 const BOLA_COLLISION_RADIUS: i32 = 20;
-const COLLISION_FRAMES: usize = 5;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub(crate) struct Point {
@@ -26,9 +25,6 @@ pub(crate) struct Bola {
 
     #[serde(skip_serializing, rename = "v")]
     velocity: Vector,
-
-    #[serde(skip_deserializing, rename = "t")]
-    collision_frames_remaining: usize,
 }
 
 impl Bola {
@@ -76,6 +72,9 @@ pub(crate) struct BolaState {
 
     #[serde(skip_serializing)]
     canvas_width: i32,
+
+    #[serde(skip_serializing)]
+    last_collisions: HashSet<(usize, usize)>,
 }
 
 impl BolaState {
@@ -99,14 +98,9 @@ impl BolaState {
     }
 
     fn update_for_collisions(&mut self) {
-        let mut colliding_bolas = vec![];
+        let mut colliding_bolas = HashSet::new();
         let mut overlaps_x: IntervalTree<i32, usize> = IntervalTree::default();
         let mut overlaps_y: IntervalTree<i32, usize> = IntervalTree::default();
-        for b in &mut self.bolas {
-            if b.collision_frames_remaining > 0 {
-                b.collision_frames_remaining -= 1;
-            }
-        }
 
         for (i, b) in self.bolas.iter().enumerate() {
             let (x_range, y_range) = b.get_location_ranges();
@@ -117,16 +111,23 @@ impl BolaState {
 
             let collisions = collision_x.intersection(&collision_y);
             for c in collisions {
-                colliding_bolas.push((*c, i));
+                colliding_bolas.insert((*c, i));
             }
 
             overlaps_x.insert(x_range, i);
             overlaps_y.insert(y_range, i);
         }
 
-        for (one, two) in colliding_bolas {
+        for collision in &colliding_bolas {
+            if self.last_collisions.contains(collision) {
+                continue;
+            }
+
+            let (one, two) = *collision;
+
             let bola_one = &self.bolas[one];
             let bola_two = &self.bolas[two];
+
             let distance = (((bola_one.center.x - bola_two.center.x) as f64).powf(2.)
                 + ((bola_one.center.y - bola_two.center.y) as f64).powf(2.))
             .sqrt();
@@ -147,12 +148,10 @@ impl BolaState {
             let bola_one = &mut self.bolas[one];
             bola_one.velocity.vel_x -= (collision_vector_normalized.0 * speed) as i32;
             bola_one.velocity.vel_y -= (collision_vector_normalized.1 * speed) as i32;
-            bola_one.collision_frames_remaining = COLLISION_FRAMES;
 
             let bola_two = &mut self.bolas[two];
             bola_two.velocity.vel_x += (collision_vector_normalized.0 * speed) as i32;
             bola_two.velocity.vel_y += (collision_vector_normalized.1 * speed) as i32;
-            bola_two.collision_frames_remaining = COLLISION_FRAMES;
 
             let bola_one = &self.bolas[one];
             let bola_two = &self.bolas[two];
@@ -162,5 +161,7 @@ impl BolaState {
                 bola_two.center
             )
         }
+
+        self.last_collisions = colliding_bolas;
     }
 }
