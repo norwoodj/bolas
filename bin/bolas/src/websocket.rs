@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use crate::bolas::{Bola, BolaState};
 
-const TICK_INTERVAL: Duration = Duration::from_millis(16);
+const TICK_INTERVAL: Duration = Duration::from_millis(32);
 
 pub(crate) async fn serve_websockets(
     req: HttpRequest,

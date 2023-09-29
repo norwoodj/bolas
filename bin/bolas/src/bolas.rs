@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::ops::Range;
 
-const VELOCITY_SCALING_FACTOR: i32 = 16;
+const VELOCITY_SCALING_FACTOR: i32 = 8;
 const BOLA_COLLISION_RADIUS: i32 = 20;
 const COLLISION_FRAMES: usize = 5;
 
