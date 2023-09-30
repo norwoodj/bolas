@@ -1,3 +1,9 @@
+bolas (2023.9.4) jammy; urgency=medium
+
+  * feat: Makes bolas work on mobile
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sat, 30 Sep 2023 02:53:36 +0100
+
 bolas (2023.9.3) jammy; urgency=medium
 
   * fix: Fixes a couple of issues with bola physics
