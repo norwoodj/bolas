@@ -117,39 +117,83 @@ function resizeCanvas(canvas, socket) {
     );
 }
 
-function setupCanvasEvents(canvas, bolasState, socket) {
+function setupCanvasEvents(
+    canvas,
+    bolasState,
+    socket,
+    downEvent,
+    moveEvent,
+    upEvent,
+    getX,
+    getY,
+) {
     window.addEventListener(
         "resize",
         debounce((_) => resizeCanvas(canvas, socket)),
     );
 
-    canvas.onmousedown = (e) => {
-        bolasState.newBallStart = e;
+    canvas[downEvent] = (e) => {
+        bolasState.newBallStart = { x: getX(e), y: getY(e) };
     };
 
-    canvas.onmousemove = (e) => {
-        bolasState.newBallHold = e;
+    canvas[moveEvent] = (e) => {
+        bolasState.newBallHold = { x: getX(e), y: getY(e) };
     };
 
-    canvas.onmouseup = (e) => {
-        bolasState.newBallHold = e;
-
+    canvas[upEvent] = () => {
         if (bolasState.newBallStart != null) {
-            let velX = Math.floor(bolasState.newBallStart.x - e.x);
-            let velY = Math.floor(bolasState.newBallStart.y - e.y);
+            let velX = Math.floor(
+                bolasState.newBallStart.x - bolasState.newBallHold.x,
+            );
+            let velY = Math.floor(
+                bolasState.newBallStart.y - bolasState.newBallHold.y,
+            );
 
             socket.send(
                 JSON.stringify({
                     NewBola: {
-                        c: { x: e.x, y: e.y },
+                        c: bolasState.newBallHold,
                         v: { vel_x: velX, vel_y: velY },
                     },
                 }),
             );
+
             bolasState.newBallStart = null;
             bolasState.newBallHold = null;
         }
     };
+}
+
+function setupDesktopEvents(canvas, bolasState, socket) {
+    console.log("Setting up bolas events for desktop browswer");
+    setupCanvasEvents(
+        canvas,
+        bolasState,
+        socket,
+        "onmousedown",
+        "onmousemove",
+        "onmouseup",
+        (e) => e.x,
+        (e) => e.y,
+    );
+}
+
+function setupMobileEvents(canvas, bolasState, socket) {
+    console.log("Setting up bolas events for mobile browswer");
+    setupCanvasEvents(
+        canvas,
+        bolasState,
+        socket,
+        "ontouchstart",
+        "ontouchmove",
+        "ontouchend",
+        (e) => e.touches[0].clientX,
+        (e) => e.touches[0].clientY,
+    );
+}
+
+function isMobile() {
+    return "ontouchstart" in document.documentElement;
 }
 
 function setupWebsocketEvents(canvas, bolasState) {
@@ -158,6 +202,13 @@ function setupWebsocketEvents(canvas, bolasState) {
 
     socket.onopen = (_) => {
         resizeCanvas(canvas, socket);
+
+        if (isMobile()) {
+            setupMobileEvents(canvas, bolasState, socket);
+        } else {
+            setupDesktopEvents(canvas, bolasState, socket);
+        }
+
         setupCanvasEvents(canvas, bolasState, socket);
         drawLoop(canvas, bolasState);
     };

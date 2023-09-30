@@ -20,5 +20,5 @@ run: version.json
 	cp version.json static/frontend-version.json
 	cargo run -- \
 		--static-file-path ./static \
-		--tcp-addrs 127.0.0.1:23080 \
+		--tcp-addrs 0.0.0.0:23080 \
 		--unix-addrs /tmp/bolas.sock
