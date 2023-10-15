@@ -12,7 +12,7 @@ use std::os::unix::net::UnixListener;
 fn get_systemd_listeners(
     systemd_names: &[String],
 ) -> io::Result<(HashMap<String, TcpListener>, HashMap<String, UnixListener>)> {
-    let file_descriptors_with_names = activation::receive_descriptors_with_names(true)
+    let file_descriptors_with_names = activation::receive_descriptors_with_names(false)
         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
     let inet_listeners = file_descriptors_with_names

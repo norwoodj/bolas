@@ -1,6 +1,8 @@
 use actix_web::{HttpResponse, Result};
 use lazy_static::lazy_static;
-use prometheus::{register_int_counter, register_int_gauge, IntCounter, IntGauge, TextEncoder};
+use prometheus::{
+    register_int_counter, register_int_gauge, Encoder, IntCounter, IntGauge, TextEncoder,
+};
 
 lazy_static! {
     pub(crate) static ref ARENAS_TOTAL: IntCounter =
@@ -24,6 +26,6 @@ pub async fn metrics_handler() -> Result<HttpResponse> {
         .unwrap();
 
     Ok(HttpResponse::Ok()
-        .content_type("application/openmetrics-text; version=1.0.0; charset=utf-8")
+        .content_type(encoder.format_type())
         .body(body))
 }
