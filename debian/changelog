@@ -1,3 +1,11 @@
+bolas (2023.10.1) jammy; urgency=medium
+
+  * chore: moves runtime parameters into a BolasConfig struct rather than having web::Data entries for each
+  * chore: factors our http server binding/running code from definition of routes
+  * feat: adds a metrics server and a couple of simple metrics
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sun, 15 Oct 2023 21:00:23 +0100
+
 bolas (2023.10.0) jammy; urgency=medium
 
   * chore: adds a beautiful baseball favicon
