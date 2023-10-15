@@ -8,6 +8,8 @@ build = "build.rs"
 [dependencies]
 actix = { workspace = true }
 actix-files = { workspace = true }
+actix-http = { workspace = true }
+actix-service = { workspace = true }
 actix-web = { workspace = true }
 actix-web-actors = { workspace = true }
 bio = { workspace = true }
