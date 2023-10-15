@@ -1,3 +1,9 @@
+bolas (2023.10.2) jammy; urgency=medium
+
+  * fix: couple fixes to let bolas start under systemd and to prometheus metrics format
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sun, 15 Oct 2023 21:41:56 +0100
+
 bolas (2023.10.1) jammy; urgency=medium
 
   * chore: moves runtime parameters into a BolasConfig struct rather than having web::Data entries for each
