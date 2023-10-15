@@ -6,6 +6,7 @@ use std::io;
 mod bolas;
 mod config;
 mod http;
+mod metrics;
 mod static_files;
 mod version;
 mod websocket;
@@ -15,7 +16,7 @@ use self::http::run_http_server;
 use self::version::VersionInfo;
 
 async fn run_application_server(
-    bolas_args: BolasArgs,
+    bolas_args: &BolasArgs,
     bolas_config: BolasConfig,
     version_info: VersionInfo,
 ) -> io::Result<()> {
@@ -38,9 +39,27 @@ async fn run_application_server(
 
     run_http_server(
         app_server,
+        "bolas application",
         &bolas_args.tcp_addrs,
         &bolas_args.unix_addrs,
         &bolas_args.systemd_names,
+    )
+    .await
+}
+
+async fn run_management_server(bolas_args: &BolasArgs) -> io::Result<()> {
+    let app_server = HttpServer::new(move || {
+        App::new()
+            .wrap(Logger::default())
+            .route("/metrics", web::get().to(metrics::metrics_handler))
+    });
+
+    run_http_server(
+        app_server,
+        "bolas management",
+        &bolas_args.management_tcp_addrs,
+        &bolas_args.management_unix_addrs,
+        &bolas_args.management_systemd_names,
     )
     .await
 }
@@ -58,5 +77,9 @@ async fn main() -> io::Result<()> {
         }
     };
 
-    run_application_server(bolas_args, bolas_config, version_info).await
+    let application_server = run_application_server(&bolas_args, bolas_config, version_info);
+    let management_server = run_management_server(&bolas_args);
+
+    futures::try_join!(application_server, management_server)?;
+    Ok(())
 }

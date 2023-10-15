@@ -66,7 +66,7 @@ impl Bola {
 }
 
 #[derive(Serialize)]
-pub(crate) struct BolasState {
+pub(crate) struct BolasArena {
     bolas: Vec<Bola>,
 
     #[serde(skip_serializing)]
@@ -85,8 +85,18 @@ pub(crate) struct BolasState {
     last_collisions: HashSet<(usize, usize)>,
 }
 
-impl BolasState {
+impl Drop for BolasArena {
+    fn drop(&mut self) {
+        crate::metrics::ARENAS_ACTIVE.dec();
+        crate::metrics::BOLAS_ACTIVE.sub(self.bolas.len() as i64);
+    }
+}
+
+impl BolasArena {
     pub(crate) fn new(refresh_rate_ms: u64, velocity_scaling_factor: i32) -> Self {
+        crate::metrics::ARENAS_ACTIVE.inc();
+        crate::metrics::ARENAS_TOTAL.inc();
+
         Self {
             bolas: Default::default(),
             refresh_rate: Duration::from_millis(refresh_rate_ms),
@@ -96,7 +106,11 @@ impl BolasState {
             velocity_scaling_factor,
         }
     }
+
     pub(crate) fn add_bola(&mut self, mut bola: Bola) {
+        crate::metrics::BOLAS_ACTIVE.inc();
+        crate::metrics::BOLAS_TOTAL.inc();
+
         bola.velocity.vel_x /= self.velocity_scaling_factor as f64;
         bola.velocity.vel_y /= self.velocity_scaling_factor as f64;
         self.bolas.push(bola);

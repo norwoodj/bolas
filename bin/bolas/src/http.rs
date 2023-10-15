@@ -37,6 +37,7 @@ fn get_systemd_listeners(
 
 pub(crate) async fn run_http_server<F, I, S, B>(
     mut server: HttpServer<F, I, S, B>,
+    server_name: &'static str,
     tcp_addrs: &[SocketAddr],
     unix_addrs: &[String],
     systemd_names: &[String],
@@ -51,12 +52,12 @@ where
     B: MessageBody + 'static,
 {
     for t in tcp_addrs {
-        log::info!("Starting HTTP server on tcp listener {}", t);
+        log::info!("Starting {server_name} server on tcp listener {}", t);
         server = server.bind(t)?;
     }
 
     for u in unix_addrs {
-        log::info!("Starting HTTP server on unix listener {}", u);
+        log::info!("Starting {server_name} server on unix listener {}", u);
         server = server.bind_uds(u)?;
     }
 
@@ -65,7 +66,7 @@ where
 
         for (name, t) in tcp_listeners {
             log::info!(
-                "Starting HTTP server on inherited systemd tcp listener {}",
+                "Starting {server_name} server on inherited systemd tcp listener {}",
                 name
             );
             server = server.listen(t)?;
@@ -73,7 +74,7 @@ where
 
         for (name, u) in unix_listeners {
             log::info!(
-                "Starting HTTP server on inherited systemd unix listener {}",
+                "Starting {server_name} server on inherited systemd unix listener {}",
                 name
             );
             server = server.listen_uds(u)?;

@@ -18,16 +18,32 @@ pub(crate) struct BolasArgs {
     pub(crate) static_file_path: PathBuf,
 
     /// List of Systemd file descriptor names to listen on
+    /// for the application server
     #[arg(env, long)]
     pub(crate) systemd_names: Vec<String>,
 
-    /// List of TCP addresses to listen for http on
+    /// List of TCP addresses to listen on for the application server
     #[arg(env, long)]
     pub(crate) tcp_addrs: Vec<SocketAddr>,
 
-    /// List of Unix socket addresses to listen for http on
+    /// List of Unix socket addresses to listen on for the application
+    /// server
     #[arg(env, long)]
     pub(crate) unix_addrs: Vec<String>,
+
+    /// List of Systemd file descriptor names to listen on
+    /// for the management server
+    #[arg(env, long)]
+    pub(crate) management_systemd_names: Vec<String>,
+
+    /// List of TCP addresses to listen on for the management server
+    #[arg(env, long)]
+    pub(crate) management_tcp_addrs: Vec<SocketAddr>,
+
+    /// List of Unix socket addresses to listen on for the management
+    /// server
+    #[arg(env, long)]
+    pub(crate) management_unix_addrs: Vec<String>,
 }
 
 #[derive(Clone)]

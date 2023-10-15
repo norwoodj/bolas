@@ -4,7 +4,7 @@ use actix_web_actors::ws;
 use serde::Deserialize;
 
 use crate::{
-    bolas::{Bola, BolasState},
+    bolas::{Bola, BolasArena},
     config::BolasConfig,
 };
 
@@ -14,14 +14,14 @@ pub(crate) async fn serve_websockets(
     config: web::Data<BolasConfig>,
 ) -> Result<HttpResponse, Error> {
     let actor = BolasWebsocketActor {
-        bolas_state: BolasState::new(config.bolas_refresh_rate_ms, config.velocity_scaling_factor),
+        bolas_state: BolasArena::new(config.bolas_refresh_rate_ms, config.velocity_scaling_factor),
     };
 
     ws::start(actor, &req, stream)
 }
 
 struct BolasWebsocketActor {
-    bolas_state: BolasState,
+    bolas_state: BolasArena,
 }
 
 #[derive(Deserialize)]

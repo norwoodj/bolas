@@ -21,4 +21,5 @@ run: version.json
 	cargo run -- \
 		--static-file-path ./static \
 		--tcp-addrs 0.0.0.0:23080 \
-		--unix-addrs /tmp/bolas.sock
+		--unix-addrs /tmp/bolas.sock \
+		--management-tcp-addrs 0.0.0.0:23090
