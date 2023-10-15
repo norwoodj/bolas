@@ -2,22 +2,24 @@ use actix_files::NamedFile;
 use actix_web::{web, Result};
 use serde::Deserialize;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+
+use crate::config::BolasConfig;
 
 #[derive(Deserialize)]
 pub(crate) struct StaticFilePathParam {
     filename: String,
 }
 
-pub(crate) async fn serve_index_html(static_file_folder: web::Data<PathBuf>) -> Result<NamedFile> {
-    do_serve_static_file(&static_file_folder, "index.html").await
+pub(crate) async fn serve_index_html(config: web::Data<BolasConfig>) -> Result<NamedFile> {
+    do_serve_static_file(&config.static_file_path, "index.html").await
 }
 
 pub(crate) async fn serve_static_file(
-    static_file_folder: web::Data<PathBuf>,
+    config: web::Data<BolasConfig>,
     static_file_path_param: web::Path<StaticFilePathParam>,
 ) -> Result<NamedFile> {
-    do_serve_static_file(&static_file_folder, &static_file_path_param.filename).await
+    do_serve_static_file(&config.static_file_path, &static_file_path_param.filename).await
 }
 
 pub(crate) async fn do_serve_static_file(

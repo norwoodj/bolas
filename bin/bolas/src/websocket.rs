@@ -3,19 +3,18 @@ use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
 use actix_web_actors::ws;
 use serde::Deserialize;
 
-use crate::bolas::{Bola, BolasState};
+use crate::{
+    bolas::{Bola, BolasState},
+    config::BolasConfig,
+};
 
 pub(crate) async fn serve_websockets(
     req: HttpRequest,
     stream: web::Payload,
-    bolas_refresh_rate_ms: web::Data<u64>,
-    velocity_scaling_factor: web::Data<i32>,
+    config: web::Data<BolasConfig>,
 ) -> Result<HttpResponse, Error> {
     let actor = BolasWebsocketActor {
-        bolas_state: BolasState::new(
-            *bolas_refresh_rate_ms.into_inner(),
-            *velocity_scaling_factor.into_inner(),
-        ),
+        bolas_state: BolasState::new(config.bolas_refresh_rate_ms, config.velocity_scaling_factor),
     };
 
     ws::start(actor, &req, stream)
