@@ -1,3 +1,4 @@
+use crate::utils::bootstrap_to_io_error;
 use actix_http::{Request, Response};
 use actix_service::ServiceFactory;
 use actix_web::{body::MessageBody, dev::AppConfig, HttpServer};
@@ -12,8 +13,8 @@ use std::os::unix::net::UnixListener;
 fn get_systemd_listeners(
     systemd_names: &[String],
 ) -> io::Result<(HashMap<String, TcpListener>, HashMap<String, UnixListener>)> {
-    let file_descriptors_with_names = activation::receive_descriptors_with_names(false)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let file_descriptors_with_names =
+        activation::receive_descriptors_with_names(false).map_err(bootstrap_to_io_error)?;
 
     let inet_listeners = file_descriptors_with_names
         .iter()

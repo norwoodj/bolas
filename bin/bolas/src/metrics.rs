@@ -1,31 +1,16 @@
-use actix_web::{HttpResponse, Result};
-use lazy_static::lazy_static;
-use prometheus::{
-    register_int_counter, register_int_gauge, Encoder, IntCounter, IntGauge, TextEncoder,
-};
+use foundations::telemetry::metrics::{metrics, Counter, Gauge};
 
-lazy_static! {
-    pub(crate) static ref ARENAS_TOTAL: IntCounter =
-        register_int_counter!("bolas_arenas_total", "Number of bolas arenas created").unwrap();
-    pub(crate) static ref BOLAS_TOTAL: IntCounter =
-        register_int_counter!("bolas_bolas_total", "Number of bolas created").unwrap();
-    pub(crate) static ref ARENAS_ACTIVE: IntGauge = register_int_gauge!(
-        "bolas_arenas_active",
-        "Number of bolas arenas currently active"
-    )
-    .unwrap();
-    pub(crate) static ref BOLAS_ACTIVE: IntGauge =
-        register_int_gauge!("bolas_bolas_active", "Number of bolas currently active").unwrap();
-}
+#[metrics]
+pub(crate) mod metrics {
+    /// Number of total bolas arenas created
+    pub(crate) fn arenas_total() -> Counter;
 
-pub async fn metrics_handler() -> Result<HttpResponse> {
-    let mut body = String::new();
-    let encoder = TextEncoder;
-    encoder
-        .encode_utf8(&prometheus::default_registry().gather(), &mut body)
-        .unwrap();
+    /// Number of total bolas created within all of the arenas
+    pub(crate) fn bolas_total() -> Counter;
 
-    Ok(HttpResponse::Ok()
-        .content_type(encoder.format_type())
-        .body(body))
+    /// Number of active bolas arenas
+    pub(crate) fn arenas_active() -> Gauge;
+
+    /// Number of active bolas within all active arenas
+    pub(crate) fn bolas_active() -> Gauge;
 }

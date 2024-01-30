@@ -1,3 +1,4 @@
+use crate::metrics::metrics;
 use bio::data_structures::interval_tree::IntervalTree;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -87,15 +88,15 @@ pub(crate) struct BolasArena {
 
 impl Drop for BolasArena {
     fn drop(&mut self) {
-        crate::metrics::ARENAS_ACTIVE.dec();
-        crate::metrics::BOLAS_ACTIVE.sub(self.bolas.len() as i64);
+        metrics::arenas_active().dec();
+        metrics::bolas_active().dec_by(self.bolas.len() as u64);
     }
 }
 
 impl BolasArena {
     pub(crate) fn new(refresh_rate_ms: u64, velocity_scaling_factor: i32) -> Self {
-        crate::metrics::ARENAS_ACTIVE.inc();
-        crate::metrics::ARENAS_TOTAL.inc();
+        metrics::arenas_active().inc();
+        metrics::arenas_total().inc();
 
         Self {
             bolas: Default::default(),
@@ -108,8 +109,8 @@ impl BolasArena {
     }
 
     pub(crate) fn add_bola(&mut self, mut bola: Bola) {
-        crate::metrics::BOLAS_ACTIVE.inc();
-        crate::metrics::BOLAS_TOTAL.inc();
+        metrics::bolas_active().inc();
+        metrics::bolas_total().inc();
 
         bola.velocity.vel_x /= self.velocity_scaling_factor as f64;
         bola.velocity.vel_y /= self.velocity_scaling_factor as f64;

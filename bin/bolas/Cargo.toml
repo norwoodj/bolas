@@ -16,12 +16,11 @@ bio = { workspace = true }
 env_logger = { workspace = true }
 foundations = { workspace = true }
 futures = { workspace = true }
-lazy_static = { workspace = true }
 libsystemd = { workspace = true }
 log = { workspace = true }
-prometheus = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+tokio = { workspace = true }
 
 [build-dependencies]
 vergen = { workspace = true }

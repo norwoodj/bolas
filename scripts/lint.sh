@@ -2,5 +2,6 @@
 set -o errexit; set -o nounset; set -o pipefail
 
 cargo clippy -- --deny warnings
-cargo fmt
+cargo machete
+cargo fmt --check
 prettier --write .

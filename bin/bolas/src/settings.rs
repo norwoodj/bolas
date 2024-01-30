@@ -1,5 +1,6 @@
-use foundations::settings::net::SocketAddr;
-use foundations::settings::settings;
+use crate::utils::bootstrap_to_io_error;
+use foundations::settings::{net::SocketAddr, settings};
+use foundations::telemetry::settings::TelemetrySettings;
 use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::io;
@@ -18,8 +19,8 @@ pub(crate) struct BolasSettings {
     /// Listener configuration for the application http server
     pub(crate) application_http_server: ServerListenerSettings,
 
-    /// Listener configuration for the management http server
-    pub(crate) management_http_server: ServerListenerSettings,
+    /// Telemetry configuration
+    pub(crate) telemetry: TelemetrySettings,
 }
 
 #[settings]
@@ -81,7 +82,7 @@ impl TryFrom<&BolasSettings> for BolasConfig {
             .bolas_refresh_rate_ms
             .try_into()
             .map(|r: i32| 256 / r)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            .map_err(bootstrap_to_io_error)?;
 
         Ok(Self {
             bolas_refresh_rate_ms: args.bolas_refresh_rate_ms,

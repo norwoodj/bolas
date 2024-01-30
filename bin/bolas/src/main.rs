@@ -1,18 +1,25 @@
 use actix_web::{middleware::Logger, web, App, HttpServer};
 use foundations::cli::Cli;
+use foundations::telemetry::init_with_server;
+use foundations::telemetry::settings::TelemetrySettings;
+use foundations::ServiceInfo;
 use std::convert::TryInto;
 use std::io;
+use tokio::select;
+use tokio::signal::unix::{signal, SignalKind};
 
 mod bolas;
 mod http;
 mod metrics;
 mod settings;
 mod static_files;
+mod utils;
 mod version;
 mod websocket;
 
 use self::http::run_http_server;
 use self::settings::{BolasConfig, BolasSettings, ServerListenerSettings};
+use self::utils::bootstrap_to_io_error;
 use self::version::VersionInfo;
 
 async fn run_application_server(
@@ -50,24 +57,32 @@ async fn run_application_server(
 }
 
 async fn run_management_server(
-    server_listener_settings: &ServerListenerSettings,
+    telemetry_settings: &TelemetrySettings,
+    service_info: &ServiceInfo,
 ) -> io::Result<()> {
-    server_listener_settings.validate("management")?;
+    let mut int_signal_receiver = signal(SignalKind::interrupt())?;
+    let mut term_signal_receiver = signal(SignalKind::terminate())?;
 
-    let app_server = HttpServer::new(move || {
-        App::new()
-            .wrap(Logger::default())
-            .route("/metrics", web::get().to(metrics::metrics_handler))
-    });
+    let exit_signal = async move {
+        select! {
+            _ = int_signal_receiver.recv() => (),
+            _ = term_signal_receiver.recv() => (),
+        }
+    };
 
-    run_http_server(
-        app_server,
-        "bolas management",
-        &server_listener_settings.get_socket_addrs(),
-        &server_listener_settings.unix_addrs,
-        &server_listener_settings.systemd_names,
-    )
-    .await
+    log::info!(
+        "Starting telemetry server on {}",
+        telemetry_settings.server.addr
+    );
+
+    init_with_server(service_info, telemetry_settings, Default::default())
+        .map_err(bootstrap_to_io_error)?
+        .with_graceful_shutdown(exit_signal)
+        .await
+        .map_err(bootstrap_to_io_error)?;
+
+    log::info!("Telemetry server shut down gracefully");
+    Ok(())
 }
 
 #[actix_web::main]
@@ -76,7 +91,7 @@ async fn main() -> io::Result<()> {
 
     let service_info = foundations::service_info!();
     let cli = Cli::<BolasSettings>::new(&service_info, Default::default())
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        .map_err(bootstrap_to_io_error)?;
 
     let version_info = VersionInfo::default();
     let bolas_config: BolasConfig = match (&cli.settings).try_into() {
@@ -93,7 +108,7 @@ async fn main() -> io::Result<()> {
         version_info,
     );
 
-    let management_server = run_management_server(&cli.settings.management_http_server);
+    let management_server = run_management_server(&cli.settings.telemetry, &service_info);
 
     futures::try_join!(application_server, management_server)?;
     Ok(())
