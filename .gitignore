@@ -1,3 +1,4 @@
+bolas.yaml
 target/
 debian/.*
 debian/.debhelper/

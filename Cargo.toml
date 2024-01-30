@@ -16,8 +16,8 @@ actix-service = "2.0"
 actix-web = "4.2"
 actix-web-actors = "4.1"
 bio = "1.1"
-clap = { version = "4.3", features = ["derive", "env"] }
 env_logger = "0.10"
+foundations = { version = "3.1", features = ["cli", "jemalloc", "settings"] }
 futures = "0.3"
 lazy_static = "1.4.0"
 log = "0.4"

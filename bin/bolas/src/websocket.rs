@@ -5,7 +5,7 @@ use serde::Deserialize;
 
 use crate::{
     bolas::{Bola, BolasArena},
-    config::BolasConfig,
+    settings::BolasConfig,
 };
 
 pub(crate) async fn serve_websockets(

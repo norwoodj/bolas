@@ -4,7 +4,7 @@ use serde::Deserialize;
 use std::io;
 use std::path::Path;
 
-use crate::config::BolasConfig;
+use crate::settings::BolasConfig;
 
 #[derive(Deserialize)]
 pub(crate) struct StaticFilePathParam {

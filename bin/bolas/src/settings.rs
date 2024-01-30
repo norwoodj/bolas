@@ -1,49 +1,58 @@
-use clap::Parser;
+use foundations::settings::net::SocketAddr;
+use foundations::settings::settings;
 use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::io;
-use std::net::SocketAddr;
 use std::path::PathBuf;
 
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-pub(crate) struct BolasArgs {
+#[settings]
+pub(crate) struct BolasSettings {
     /// Interval in milliseconds at which the bolas state is
     /// updated and sent to the websocket client
-    #[arg(default_value = "32", env, short, long)]
+    #[serde(default = "default_bolas_refresh_rate_ms")]
     pub(crate) bolas_refresh_rate_ms: u64,
 
     /// Path to folder containing static files to be served
-    #[arg(env, short, long)]
     pub(crate) static_file_path: PathBuf,
 
+    /// Listener configuration for the application http server
+    pub(crate) application_http_server: ServerListenerSettings,
+
+    /// Listener configuration for the management http server
+    pub(crate) management_http_server: ServerListenerSettings,
+}
+
+#[settings]
+pub(crate) struct ServerListenerSettings {
     /// List of Systemd file descriptor names to listen on
-    /// for the application server
-    #[arg(env, long)]
     pub(crate) systemd_names: Vec<String>,
 
-    /// List of TCP addresses to listen on for the application server
-    #[arg(env, long)]
-    pub(crate) tcp_addrs: Vec<SocketAddr>,
+    /// List of socket addresses to listen on
+    pub(crate) socket_addrs: Vec<SocketAddr>,
 
-    /// List of Unix socket addresses to listen on for the application
-    /// server
-    #[arg(env, long)]
+    /// List of Unix socket addresses to listen on
     pub(crate) unix_addrs: Vec<String>,
+}
 
-    /// List of Systemd file descriptor names to listen on
-    /// for the management server
-    #[arg(env, long)]
-    pub(crate) management_systemd_names: Vec<String>,
+impl ServerListenerSettings {
+    pub(crate) fn validate(&self, server_name: &str) -> io::Result<()> {
+        if self.systemd_names.len() + self.socket_addrs.len() + self.unix_addrs.len() == 0 {
+            return Err(io::Error::new(
+                io::ErrorKind::AddrNotAvailable,
+                format!("No addresses provided to listen on for {server_name} server"),
+            ));
+        }
 
-    /// List of TCP addresses to listen on for the management server
-    #[arg(env, long)]
-    pub(crate) management_tcp_addrs: Vec<SocketAddr>,
+        Ok(())
+    }
 
-    /// List of Unix socket addresses to listen on for the management
-    /// server
-    #[arg(env, long)]
-    pub(crate) management_unix_addrs: Vec<String>,
+    pub(crate) fn get_socket_addrs(&self) -> Vec<std::net::SocketAddr> {
+        self.socket_addrs.iter().copied().map(Into::into).collect()
+    }
+}
+
+fn default_bolas_refresh_rate_ms() -> u64 {
+    32
 }
 
 #[derive(Clone)]
@@ -61,10 +70,10 @@ pub(crate) struct BolasConfig {
     pub(crate) velocity_scaling_factor: i32,
 }
 
-impl TryFrom<&BolasArgs> for BolasConfig {
+impl TryFrom<&BolasSettings> for BolasConfig {
     type Error = io::Error;
 
-    fn try_from(args: &BolasArgs) -> Result<Self, Self::Error> {
+    fn try_from(args: &BolasSettings) -> Result<Self, Self::Error> {
         // I've found that this is a good factor to divide the velocity
         // at which balls are released (number of pixels the user dragged
         // before releasing) to make the experience look reasonable
