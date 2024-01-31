@@ -62,27 +62,26 @@ async fn run_management_server(
 ) -> io::Result<()> {
     let mut int_signal_receiver = signal(SignalKind::interrupt())?;
     let mut term_signal_receiver = signal(SignalKind::terminate())?;
-
-    let exit_signal = async move {
-        select! {
-            _ = int_signal_receiver.recv() => (),
-            _ = term_signal_receiver.recv() => (),
-        }
-    };
+    let telemetry_server_fut =
+        init_with_server(service_info, telemetry_settings, Default::default())
+            .map_err(bootstrap_to_io_error)?;
 
     log::info!(
         "Starting telemetry server on {}",
         telemetry_settings.server.addr
     );
 
-    init_with_server(service_info, telemetry_settings, Default::default())
-        .map_err(bootstrap_to_io_error)?
-        .with_graceful_shutdown(exit_signal)
-        .await
-        .map_err(bootstrap_to_io_error)?;
-
-    log::info!("Telemetry server shut down gracefully");
-    Ok(())
+    select! {
+        _ = int_signal_receiver.recv() => {
+            log::info!("Shutting down telemetry server on SIGINT");
+            Ok(())
+        },
+        _ = term_signal_receiver.recv() => {
+            log::info!("Shutting down telemetry server on SIGTERM");
+            Ok(())
+        }
+        r = telemetry_server_fut => r.map_err(bootstrap_to_io_error),
+    }
 }
 
 #[actix_web::main]
