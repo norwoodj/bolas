@@ -1,9 +1,11 @@
 use crate::metrics::metrics;
 use bio::data_structures::interval_tree::IntervalTree;
+use foundations::telemetry::log;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::ops::Range;
 use std::time::Duration;
+use uuid::Uuid;
 
 const BOLA_COLLISION_RADIUS: i32 = 20;
 
@@ -84,6 +86,9 @@ pub(crate) struct BolasArena {
 
     #[serde(skip_serializing)]
     last_collisions: HashSet<(usize, usize)>,
+
+    #[serde(skip_serializing)]
+    id: Uuid,
 }
 
 impl Drop for BolasArena {
@@ -105,7 +110,12 @@ impl BolasArena {
             canvas_width: 0,
             last_collisions: Default::default(),
             velocity_scaling_factor,
+            id: Uuid::new_v4(),
         }
+    }
+
+    pub(crate) fn get_id(&self) -> Uuid {
+        self.id
     }
 
     pub(crate) fn add_bola(&mut self, mut bola: Bola) {
@@ -122,7 +132,7 @@ impl BolasArena {
         self.canvas_width = width;
     }
 
-    pub(crate) fn tick(&mut self) {
+    pub(crate) fn update_state(&mut self) {
         for b in &mut self.bolas {
             b.update_position(self.canvas_height as f64, self.canvas_width as f64);
         }
@@ -193,11 +203,10 @@ impl BolasArena {
             let bola_one = &self.bolas[one];
             let bola_two = &self.bolas[two];
             log::debug!(
-                "Updated for collision between bolas at {:?}:<{:?}> and {:?}:<{:?}>",
-                bola_one.center,
-                bola_two.center,
-                bola_one.velocity,
-                bola_two.velocity,
+                "Updated for collision between bolas";
+                "arena" => %self.id,
+                "bola_one" => ?bola_one,
+                "bola_two" => ?bola_two,
             )
         }
 

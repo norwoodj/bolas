@@ -2,6 +2,7 @@ use crate::utils::bootstrap_to_io_error;
 use actix_http::{Request, Response};
 use actix_service::ServiceFactory;
 use actix_web::{body::MessageBody, dev::AppConfig, HttpServer};
+use foundations::telemetry::log;
 use libsystemd::{activation, activation::IsType};
 use std::collections::HashMap;
 use std::fmt::Debug;

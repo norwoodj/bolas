@@ -1,6 +1,7 @@
 use actix_web::{middleware::Logger, web, App, HttpServer};
 use foundations::cli::Cli;
 use foundations::telemetry::init_with_server;
+use foundations::telemetry::log;
 use foundations::telemetry::settings::TelemetrySettings;
 use foundations::ServiceInfo;
 use std::convert::TryInto;
@@ -67,17 +68,17 @@ async fn run_management_server(
             .map_err(bootstrap_to_io_error)?;
 
     log::info!(
-        "Starting telemetry server on {}",
-        telemetry_settings.server.addr
+        "Starting telemetry server";
+        "address" => %telemetry_settings.server.addr
     );
 
     select! {
         _ = int_signal_receiver.recv() => {
-            log::info!("Shutting down telemetry server on SIGINT");
+            log::info!("Shutting down telemetry server on signal"; "signal" => "SIGINT");
             Ok(())
         },
         _ = term_signal_receiver.recv() => {
-            log::info!("Shutting down telemetry server on SIGTERM");
+            log::info!("Shutting down telemetry server on signal"; "signal" => "SIGTERM");
             Ok(())
         }
         r = telemetry_server_fut => r.map_err(bootstrap_to_io_error),
@@ -86,17 +87,19 @@ async fn run_management_server(
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+    let mut service_info = foundations::service_info!();
+    let version_info = VersionInfo::default();
 
-    let service_info = foundations::service_info!();
+    // Vergen generates a version using `git describe` which is more detailed
+    service_info.version = version_info.version;
+
     let cli = Cli::<BolasSettings>::new(&service_info, Default::default())
         .map_err(bootstrap_to_io_error)?;
 
-    let version_info = VersionInfo::default();
     let bolas_config: BolasConfig = match (&cli.settings).try_into() {
         Ok(c) => c,
         Err(e) => {
-            log::error!("Failed to convert arguments to runtime configuration {e:?}");
+            log::error!("Failed to convert arguments to runtime configuration"; "error" => ?e);
             return Err(e);
         }
     };

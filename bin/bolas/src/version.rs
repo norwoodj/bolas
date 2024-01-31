@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub(crate) struct VersionInfo {
     build_timestamp: &'static str,
     git_revision: &'static str,
-    version: &'static str,
+    pub(crate) version: &'static str,
 }
 
 impl Default for VersionInfo {
