@@ -1,3 +1,9 @@
+bolas (2024.6.0) jammy; urgency=medium
+
+  * feat: Adds homepage with a project description and adds a gif to the README
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sun, 30 Jun 2024 17:16:46 +0100
+
 bolas (2024.1.0) jammy; urgency=medium
 
   * feat: adds foundations and uses its settings crate to configure the application instead of clap
