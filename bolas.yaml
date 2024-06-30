@@ -1,0 +1,54 @@
+---
+# Interval in milliseconds at which the bolas state is
+# updated and sent to the websocket client
+bolas_refresh_rate_ms: 32
+# Path to folder containing static files to be served
+static_file_path: ./static
+# Listener configuration for the application http server
+application_http_server:
+    # List of Systemd file descriptor names to listen on
+    systemd_names: []
+    # List of socket addresses to listen on
+    socket_addrs:
+        - 127.0.0.1:23080
+    # List of Unix socket addresses to listen on
+    unix_addrs:
+        - /tmp/bolas.sock
+# Telemetry configuration
+telemetry:
+    # Logging settings.
+    logging:
+        # Specifies log output.
+        output: terminal
+        # The format to use for log messages.
+        format: text
+        # Set the logging verbosity level.
+        verbosity: INFO
+        # A list of field keys to redact when emitting logs.
+        #
+        # This might be useful to hide certain fields in production logs as they may
+        # contain sensitive information, but allow them in testing environment.
+        redact_keys: []
+        # Settings for rate limiting emission of log events
+        rate_limit:
+            # Whether to enable rate limiting of events
+            enabled: false
+            # Maximum number of events that can be emitted per second
+            max_events_per_second: 0
+        # Configure log volume metrics.
+        log_volume_metrics:
+            # Whether to enable log volume metrics
+            enabled: false
+    # Metrics settings.
+    metrics:
+        # How the metrics service identifier defined in `ServiceInfo` is used
+        # for this service.
+        service_name_format: metric_prefix
+        # Whether to report optional metrics in the telemetry server.
+        report_optional: false
+    # Server settings.
+    server:
+        # Enables telemetry server
+        enabled: true
+        # Telemetry server address.
+        addr: 127.0.0.1:23081
