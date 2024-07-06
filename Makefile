@@ -10,7 +10,7 @@ deb: clean version.json
 	debuild
 
 clean:
-	rm -rvf version.json static/frontend-version.json debian/bolas debian/bolas.postrm.debhelper debhelper-build-stamp bolas.yaml
+	rm -rvf version.json static/frontend-version.json debian/bolas debian/bolas.postrm.debhelper debhelper-build-stamp
 
 version.json:
 	echo '{"build_timestamp": "$(shell date --utc --iso-8601=seconds)", "git_revision": "$(shell git rev-parse HEAD)", "version": "$(shell git describe)"}' | jq . > version.json
