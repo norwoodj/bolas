@@ -1,3 +1,11 @@
+bolas (2024.7.0) jammy; urgency=medium
+
+  * chore: Adds bolas.yaml file so make run works
+  * fix: Changes title away from default MUI message
+  * chore: Adds title to arena page as well
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sat, 06 Jul 2024 15:15:23 +0100
+
 bolas (2024.6.0) jammy; urgency=medium
 
   * feat: Adds homepage with a project description and adds a gif to the README
