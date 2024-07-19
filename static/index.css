@@ -37,13 +37,30 @@ header ul.mui-list--inline {
     margin-bottom: 0;
 }
 
-.mui--text-title {
+.main-container {
+    padding-top: 15px;
+}
+
+.mui--text-title > a {
     color: #046a38;
 }
 
 .mui-btn {
     background-color: #046a38;
     color: #ffe900;
+}
+
+.mui-btn:hover {
+    background-color: #da291c;
+    color: #ffe900;
+}
+
+a {
+    color: #da291c;
+}
+
+a:hover {
+    color: #046a38;
 }
 
 header table {
@@ -54,8 +71,9 @@ header table {
  * Content CSS
  */
 
-#content-wrapper {
+.content-wrapper {
     min-height: 100%;
+    background-color: #d3d3d3;
 
     /* sticky footer */
     box-sizing: border-box;

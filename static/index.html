@@ -18,69 +18,79 @@
             <div class="mui-container">
                 <table>
                     <tr class="mui--appbar-height">
-                        <td class="mui--text-title">Bolas</td>
+                        <td class="mui--text-title"><a href="/">Bolas</a></td>
                     </tr>
                 </table>
             </div>
         </header>
-        <div id="content-wrapper" class="mui--text-center">
+        <div class="content-wrapper">
             <div class="mui--appbar-height"></div>
-            <br />
-            <br />
-            <div class="mui--text-display3">Welcome to Bolas</div>
-            <br />
-            <a href="arena.html"
-                ><button class="mui-btn mui-btn--raised">Play</button></a
-            >
-            <br />
-            <br />
-            <p>
-                Welcome to Bolas, a silly physics simulator that I wrote for fun
-                and as a demonstration of my excellent
-                <a href="https://www.rust-lang.org/">Rust</a>
-                and mediocre Javascript programming ability. If you just want to
-                play with the bolas, click the button above. Continue reading
-                for a technical explanation of how this project is implemented
-                and deployed.
-            </p>
-            <p>
-                First off, the name: "bolas" is
-                <a href="https://pt.wikipedia.org/wiki/Portugal">Portuguese</a>
-                for "balls". Morei em Portugal durante três anos entre 2022 e
-                2025. Escrevi este projeto quando estava a morar lá, portanto,
-                chamo-o "bolas".
-            </p>
-            <p>
-                Why is this interesting to you, recruiter? Well, once you've
-                played the game, you'll see there's some interesting physics
-                simulation being done. Critically, the ball movement and
-                collision detection logic is all done server-side, in rust. The
-                javascript frontend merely receives a stream of updates from a
-                <a
-                    href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API"
-                    >websocket</a
-                >
-                connection and draws the balls where it is told to. This is
-                obviously needlessly complicated, but I hope demonstrates my
-                knowledge of websockets, full-stack web development, and rust
-                programming ability. Here's a link to the
-                <a href="https://github.com/norwoodj/bolas">code</a>.
-            </p>
-            <p>
-                I deploy this project on a
-                <a href="https://www.raspberrypi.com/">Raspberry Pi</a> that
-                runs in my house. It exposes this (and several of my other
-                websites) behind
-                <a href="https://cloudflare.com">Cloudflare</a> using a
-                <a href="https://www.cloudflare.com/products/tunnel/"
-                    >cloudflared tunnel</a
-                >. I worked at cloudflare for 5 years, and made contributed
-                substantially to the tunnel project. Cloudflare is also where I
-                learned how to use
-                <a href="https://saltproject.io/index.html">salt</a>, which is
-                how I configure said raspberry pi. The code for doing that is
-                <a href="https://github.com/norwoodj/rpi-salt">here</a>.
-            </p>
+            <div class="mui-container main-container">
+                <div class="mui-panel">
+                    <h2>Welcome to Bolas</h2>
+                    <div class="mui-divider"></div>
+                    <br />
+                    <a href="arena.html"
+                        ><button class="mui-btn mui-btn--raised">
+                            Play
+                        </button></a
+                    >
+                    <br />
+                    <br />
+                    <p>
+                        Welcome to Bolas, a silly physics simulator that I wrote
+                        for fun and as a demonstration of my excellent
+                        <a href="https://www.rust-lang.org/">Rust</a>
+                        and mediocre Javascript programming ability. If you just
+                        want to play with the bolas, click the button above.
+                        Continue reading for a technical explanation of how this
+                        project is implemented and deployed.
+                    </p>
+                    <p>
+                        First off, the name: "bolas" is
+                        <a href="https://pt.wikipedia.org/wiki/Portugal"
+                            >Portuguese</a
+                        >
+                        for "balls". Morei em Portugal durante três anos entre
+                        2022 e 2025. Escrevi este projeto quando estava a morar
+                        lá, portanto, chamo-o "bolas".
+                    </p>
+                    <p>
+                        Why is this interesting to you, recruiter? Well, once
+                        you've played the game, you'll see there's some
+                        interesting physics simulation being done. Critically,
+                        the ball movement and collision detection logic is all
+                        done server-side, in rust. The javascript frontend
+                        merely receives a stream of updates from a
+                        <a
+                            href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API"
+                            >websocket</a
+                        >
+                        connection and draws the balls where it is told to. This
+                        is obviously needlessly complicated, but I hope
+                        demonstrates my knowledge of websockets, full-stack web
+                        development, and rust programming ability. Here's a link
+                        to the
+                        <a href="https://github.com/norwoodj/bolas">code</a>.
+                    </p>
+                    <p>
+                        I deploy this project on a
+                        <a href="https://www.raspberrypi.com/">Raspberry Pi</a>
+                        that runs in my house. It exposes this (and several of
+                        my other websites) behind
+                        <a href="https://cloudflare.com">Cloudflare</a> using a
+                        <a href="https://www.cloudflare.com/products/tunnel/"
+                            >cloudflared tunnel</a
+                        >. I worked at cloudflare for 5 years, and made
+                        contributed substantially to the tunnel project.
+                        Cloudflare is also where I learned how to use
+                        <a href="https://saltproject.io/index.html">salt</a>,
+                        which is how I configure said raspberry pi. The code for
+                        doing that is
+                        <a href="https://github.com/norwoodj/rpi-salt">here</a>.
+                    </p>
+                </div>
+            </div>
         </div>
         <footer>
             <div class="mui-container mui--text-center">
