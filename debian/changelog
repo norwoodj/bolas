@@ -1,3 +1,11 @@
+bolas (2024.7.1) jammy; urgency=medium
+
+  * chore: Don't delete bolas config file in clean
+  * chore: UI improvements
+  * chore: a couple more UI improvements, linking to other personal projects and homepage
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sun, 21 Jul 2024 14:40:41 +0100
+
 bolas (2024.7.0) jammy; urgency=medium
 
   * chore: Adds bolas.yaml file so make run works
