@@ -1,8 +1,8 @@
 const windowResizeDebounceTimeout = 50; // milliseconds
 const bolaRadius = 20;
-const defaultBackgroundColor = "#00274c";
-const defaultBolaLineColor = "#da291c";
-const defaultBolaColor = "#ffcb05";
+const defaultBackgroundColor = "#046a38";
+const defaultBolaLineColor = "#ffe900";
+const defaultBolaColor = "#da291c";
 
 class BolasState {
     constructor() {
