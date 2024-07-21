@@ -41,8 +41,14 @@ header ul.mui-list--inline {
     padding-top: 15px;
 }
 
+.footer-link,
 .mui--text-title > a {
     color: #046a38;
+}
+
+.footer-link:hover,
+.mui--text-title > a:hover {
+    color: #ffe900;
 }
 
 .mui-btn {
@@ -88,7 +94,7 @@ header table {
 footer {
     box-sizing: border-box;
     height: 100px;
-    background-color: #eee;
+    background-color: #da291c;
     border-top: 1px solid #e0e0e0;
     padding-top: 35px;
 }
