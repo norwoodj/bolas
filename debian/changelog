@@ -1,3 +1,9 @@
+bolas (2024.8.1) jammy; urgency=medium
+
+  * fix: updates theme color for arena page
+
+ -- John Norwood <norwood.john.m@gmail.com>  Tue, 06 Aug 2024 09:06:59 +0100
+
 bolas (2024.8.0) jammy; urgency=medium
 
   * feat: some typo fixes on the homepage and tweaks to arena colors I didn't really like the red/green arena, so now it's blue/white
