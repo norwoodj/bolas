@@ -10,6 +10,7 @@ use tokio::select;
 use tokio::signal::unix::{signal, SignalKind};
 
 mod bolas;
+mod collisions;
 mod http;
 mod metrics;
 mod settings;

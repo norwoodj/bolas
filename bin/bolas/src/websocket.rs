@@ -15,7 +15,11 @@ pub(crate) async fn serve_websockets(
     config: web::Data<BolasConfig>,
 ) -> Result<HttpResponse, Error> {
     let actor = BolasWebsocketActor {
-        bolas_state: BolasArena::new(config.bolas_refresh_rate_ms, config.velocity_scaling_factor),
+        bolas_state: BolasArena::new(
+            config.bolas_refresh_rate_ms,
+            config.velocity_scaling_factor,
+            config.collision_detection_algorithm,
+        ),
     };
 
     ws::start(actor, &req, stream)

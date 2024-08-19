@@ -1,3 +1,4 @@
+use crate::collisions::CollisionDetectionAlgorithm;
 use crate::utils::bootstrap_to_io_error;
 use foundations::settings::{net::SocketAddr, settings};
 use foundations::telemetry::settings::TelemetrySettings;
@@ -12,6 +13,9 @@ pub(crate) struct BolasSettings {
     /// updated and sent to the websocket client
     #[serde(default = "default_bolas_refresh_rate_ms")]
     pub(crate) bolas_refresh_rate_ms: u64,
+
+    /// Algorithm to use when detecting collisions
+    pub(crate) collision_detection_algorithm: CollisionDetectionAlgorithm,
 
     /// Path to folder containing static files to be served
     pub(crate) static_file_path: PathBuf,
@@ -69,6 +73,9 @@ pub(crate) struct BolasConfig {
     /// (length of pull line in pixels) is divided to get the
     /// actual velocity used
     pub(crate) velocity_scaling_factor: i32,
+
+    /// Algorithm to use when detecting collisions
+    pub(crate) collision_detection_algorithm: CollisionDetectionAlgorithm,
 }
 
 impl TryFrom<&BolasSettings> for BolasConfig {
@@ -88,6 +95,7 @@ impl TryFrom<&BolasSettings> for BolasConfig {
             bolas_refresh_rate_ms: args.bolas_refresh_rate_ms,
             static_file_path: args.static_file_path.clone(),
             velocity_scaling_factor,
+            collision_detection_algorithm: args.collision_detection_algorithm,
         })
     }
 }

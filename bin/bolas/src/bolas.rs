@@ -1,33 +1,30 @@
+use crate::collisions::{Collision, CollisionDetectionAlgorithm, CollisionDetector};
 use crate::metrics::metrics;
-use bio::data_structures::interval_tree::IntervalTree;
 use foundations::telemetry::log;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::ops::Range;
 use std::time::Duration;
 use uuid::Uuid;
 
-const BOLA_COLLISION_RADIUS: i32 = 20;
-
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Point {
-    x: f64,
-    y: f64,
+    pub(crate) x: f64,
+    pub(crate) y: f64,
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Vector {
-    vel_x: f64,
-    vel_y: f64,
+    pub(crate) vel_x: f64,
+    pub(crate) vel_y: f64,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Bola {
     #[serde(rename = "c")]
-    center: Point,
+    pub(crate) center: Point,
 
     #[serde(skip_serializing, rename = "v")]
-    velocity: Vector,
+    pub(crate) velocity: Vector,
 }
 
 impl Bola {
@@ -57,15 +54,6 @@ impl Bola {
         self.center.x = new_center_x;
         self.center.y = new_center_y;
     }
-
-    fn get_location_ranges(&self) -> (Range<i32>, Range<i32>) {
-        (
-            (self.center.x.round() as i32) - BOLA_COLLISION_RADIUS
-                ..(self.center.x.round() as i32) + BOLA_COLLISION_RADIUS,
-            (self.center.y.round() as i32) - BOLA_COLLISION_RADIUS
-                ..(self.center.y.round() as i32) + BOLA_COLLISION_RADIUS,
-        )
-    }
 }
 
 #[derive(Serialize)]
@@ -85,10 +73,13 @@ pub(crate) struct BolasArena {
     canvas_width: i32,
 
     #[serde(skip_serializing)]
-    last_collisions: HashSet<(usize, usize)>,
+    last_collisions: HashSet<Collision>,
 
     #[serde(skip_serializing)]
     id: Uuid,
+
+    #[serde(skip_serializing)]
+    collision_detection_algorithm: CollisionDetectionAlgorithm,
 }
 
 impl Drop for BolasArena {
@@ -99,7 +90,11 @@ impl Drop for BolasArena {
 }
 
 impl BolasArena {
-    pub(crate) fn new(refresh_rate_ms: u64, velocity_scaling_factor: i32) -> Self {
+    pub(crate) fn new(
+        refresh_rate_ms: u64,
+        velocity_scaling_factor: i32,
+        collision_detection_algorithm: CollisionDetectionAlgorithm,
+    ) -> Self {
         metrics::arenas_active().inc();
         metrics::arenas_total().inc();
 
@@ -111,6 +106,7 @@ impl BolasArena {
             last_collisions: Default::default(),
             velocity_scaling_factor,
             id: Uuid::new_v4(),
+            collision_detection_algorithm,
         }
     }
 
@@ -141,35 +137,23 @@ impl BolasArena {
     }
 
     fn update_for_collisions(&mut self) {
-        let mut colliding_bolas = HashSet::new();
-        let mut overlaps_x: IntervalTree<i32, usize> = IntervalTree::default();
-        let mut overlaps_y: IntervalTree<i32, usize> = IntervalTree::default();
+        let mut collision_detector: CollisionDetector = self.collision_detection_algorithm.into();
+        let collisions = self
+            .bolas
+            .iter()
+            .enumerate()
+            .flat_map(|(bola_one_idx, _)| {
+                collision_detector.detect_collisions_for_bola(&self.bolas, bola_one_idx)
+            })
+            .collect();
 
-        for (i, b) in self.bolas.iter().enumerate() {
-            let (x_range, y_range) = b.get_location_ranges();
-            let collision_x: HashSet<usize> =
-                overlaps_x.find(&x_range).map(|e| *e.data()).collect();
-            let collision_y: HashSet<usize> =
-                overlaps_y.find(&y_range).map(|e| *e.data()).collect();
-
-            let collisions = collision_x.intersection(&collision_y);
-            for c in collisions {
-                colliding_bolas.insert((*c, i));
-            }
-
-            overlaps_x.insert(x_range, i);
-            overlaps_y.insert(y_range, i);
-        }
-
-        for collision in &colliding_bolas {
-            if self.last_collisions.contains(collision) {
+        for c in &collisions {
+            if self.last_collisions.contains(c) {
                 continue;
             }
 
-            let (one, two) = *collision;
-
-            let bola_one = &self.bolas[one];
-            let bola_two = &self.bolas[two];
+            let bola_one = &self.bolas[c.one];
+            let bola_two = &self.bolas[c.two];
 
             let distance = ((bola_one.center.x - bola_two.center.x).powf(2.)
                 + (bola_one.center.y - bola_two.center.y).powf(2.))
@@ -192,16 +176,16 @@ impl BolasArena {
             let speed = relative_velocity_vector.0 * collision_vector_normalized.0
                 + relative_velocity_vector.1 * collision_vector_normalized.1;
 
-            let bola_one = &mut self.bolas[one];
+            let bola_one = &mut self.bolas[c.one];
             bola_one.velocity.vel_x -= collision_vector_normalized.0 * speed;
             bola_one.velocity.vel_y -= collision_vector_normalized.1 * speed;
 
-            let bola_two = &mut self.bolas[two];
+            let bola_two = &mut self.bolas[c.two];
             bola_two.velocity.vel_x += collision_vector_normalized.0 * speed;
             bola_two.velocity.vel_y += collision_vector_normalized.1 * speed;
 
-            let bola_one = &self.bolas[one];
-            let bola_two = &self.bolas[two];
+            let bola_one = &self.bolas[c.one];
+            let bola_two = &self.bolas[c.two];
             log::debug!(
                 "Updated for collision between bolas";
                 "arena" => %self.id,
@@ -210,7 +194,7 @@ impl BolasArena {
             )
         }
 
-        self.last_collisions = colliding_bolas;
+        self.last_collisions = collisions;
     }
 
     pub(crate) fn get_refresh_rate(&self) -> Duration {

@@ -2,6 +2,8 @@
 # Interval in milliseconds at which the bolas state is
 # updated and sent to the websocket client
 bolas_refresh_rate_ms: 32
+# Algorithm to use when detecting collisions
+collision_detection_algorithm: interval_trees
 # Path to folder containing static files to be served
 static_file_path: ./static
 # Listener configuration for the application http server
