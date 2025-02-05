@@ -1,3 +1,9 @@
+bolas (2025.2.0) noble; urgency=medium
+
+  * feat: Adds a new method for detecting collisions and the ability to configure which is used
+
+ -- John Norwood <norwood.john.m@gmail.com>  Wed, 05 Feb 2025 16:28:04 +0000
+
 bolas (2024.8.1) jammy; urgency=medium
 
   * fix: updates theme color for arena page
